@@ -8,6 +8,14 @@ function setup() {
   // テキストのデフォルト設定
   textFont('Courier New');
   textAlign(LEFT, TOP);
+
+  // デバッグ情報をコンソールに出力
+  console.log('=== Ultima-like RPG 初期化 ===');
+  console.log(`タイルサイズ: ${TILE_SIZE}px`);
+  console.log(`可視範囲: ${VIEW_COLS} x ${VIEW_ROWS} タイル`);
+  console.log(`マップサイズ: ${GRID_WIDTH} x ${GRID_HEIGHT} タイル`);
+  console.log(`プレイヤー初期位置: (${Game.player.x}, ${Game.player.y})`);
+  console.log('カメラ追従システム: 有効');
 }
 
 // 描画ループ

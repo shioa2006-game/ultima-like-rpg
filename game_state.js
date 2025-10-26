@@ -39,9 +39,9 @@ const SCENE = {
 };
 
 // グリッドとタイルのサイズ
-const GRID_WIDTH = 24;
-const GRID_HEIGHT = 18;
-const TILE_SIZE = 40;
+const GRID_WIDTH = 24;   // マップの幅（タイル数）
+const GRID_HEIGHT = 18;  // マップの高さ（タイル数）
+const TILE_SIZE = 40;    // 1タイルのサイズ（ピクセル） ※40pxに拡大済み
 
 // キャンバスサイズ
 const CANVAS_WIDTH = 800;
@@ -52,11 +52,11 @@ const MAP_HEIGHT = 360; // 800x360 (上3/5)
 const PANEL_HEIGHT = 120; // メッセージとステータス各120px
 const COMMAND_HEIGHT = 120; // コマンドヒント120px
 
-// 可視範囲の定数（カメラシステム用）
-const VIEW_W = 800;
-const VIEW_H = 360;
-const VIEW_COLS = Math.floor(VIEW_W / TILE_SIZE); // 20タイル
-const VIEW_ROWS = Math.floor(VIEW_H / TILE_SIZE); // 9タイル
+// 可視範囲の定数（カメラ追従システム用）
+const VIEW_W = 800;                                // 可視範囲の幅（ピクセル）
+const VIEW_H = 360;                                // 可視範囲の高さ（ピクセル）
+const VIEW_COLS = Math.floor(VIEW_W / TILE_SIZE); // 可視範囲の幅（タイル数）= 20タイル
+const VIEW_ROWS = Math.floor(VIEW_H / TILE_SIZE); // 可視範囲の高さ（タイル数）= 9タイル
 
 // ゲーム状態
 const Game = {
