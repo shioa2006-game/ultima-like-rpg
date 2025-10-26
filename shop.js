@@ -19,8 +19,8 @@
       Game.pushMessage("もう一歩近づこう。");
       return false;
     }
-    Game.ui.open(Game.ui.OVERLAY.SHOP);
     Game.pushMessage("商人と商談を始めた。");
+    Game.ui.open(Game.ui.OVERLAY.SHOP);
     return true;
   }
 
@@ -59,7 +59,6 @@
     }
     if (keyCode === window.ENTER) {
       confirmSelection(shopState.mode);
-      return;
     }
   }
 
@@ -72,15 +71,10 @@
 
   function moveSelection(delta) {
     const shopState = Game.ui.state.shop;
-    const list =
-      shopState.mode === "SELL" ? getSellOptions() : SHOP_ITEMS;
+    const list = shopState.mode === "SELL" ? getSellOptions() : SHOP_ITEMS;
     if (!list.length) return;
     const maxIndex = list.length - 1;
-    shopState.selection = Game.utils.clamp(
-      shopState.selection + delta,
-      0,
-      maxIndex
-    );
+    shopState.selection = Game.utils.clamp(shopState.selection + delta, 0, maxIndex);
   }
 
   function confirmSelection(mode) {
@@ -106,11 +100,7 @@
       Game.pushMessage("売れるアイテムがない。");
       return;
     }
-    const index = Game.utils.clamp(
-      shopState.selection,
-      0,
-      sellList.length - 1
-    );
+    const index = Game.utils.clamp(shopState.selection, 0, sellList.length - 1);
     const target = sellList[index];
     if (!target.canSell) {
       Game.pushMessage(target.reason || "今は売却できない。");
