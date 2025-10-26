@@ -22,8 +22,8 @@ function drawEmoji(emoji, gridX, gridY) {
   if (!emoji) return;
 
   push();
-  // フォントサイズを設定
-  textSize(24);
+  // フォントサイズを設定（40pxタイルに適したサイズ）
+  textSize(34);
   textAlign(CENTER, CENTER);
 
   // グリッド座標をピクセル座標に変換
