@@ -41,7 +41,7 @@ const SCENE = {
 // グリッドとタイルのサイズ
 const GRID_WIDTH = 24;
 const GRID_HEIGHT = 18;
-const TILE_SIZE = 32;
+const TILE_SIZE = 40;
 
 // キャンバスサイズ
 const CANVAS_WIDTH = 800;
@@ -51,6 +51,12 @@ const CANVAS_HEIGHT = 600;
 const MAP_HEIGHT = 360; // 800x360 (上3/5)
 const PANEL_HEIGHT = 120; // メッセージとステータス各120px
 const COMMAND_HEIGHT = 120; // コマンドヒント120px
+
+// 可視範囲の定数（カメラシステム用）
+const VIEW_W = 800;
+const VIEW_H = 360;
+const VIEW_COLS = Math.floor(VIEW_W / TILE_SIZE); // 20タイル
+const VIEW_ROWS = Math.floor(VIEW_H / TILE_SIZE); // 9タイル
 
 // ゲーム状態
 const Game = {

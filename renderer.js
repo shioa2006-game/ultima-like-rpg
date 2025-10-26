@@ -4,10 +4,22 @@
 function drawMap() {
   const map = getCurrentMap();
 
-  // タイルを描画（24x18グリッド、上部360pxに収める）
-  for (let y = 0; y < GRID_HEIGHT; y++) {
-    for (let x = 0; x < GRID_WIDTH; x++) {
-      const tileId = map.tiles[y][x];
+  // カメラ座標を計算
+  const camera = computeCameraLeftTop(Game.player.x, Game.player.y);
+
+  // 可視範囲のタイルのみ描画（20x9グリッド、上部360pxに収める）
+  for (let y = 0; y < VIEW_ROWS; y++) {
+    for (let x = 0; x < VIEW_COLS; x++) {
+      // 実際のマップ座標
+      const mapX = camera.camLeft + x;
+      const mapY = camera.camTop + y;
+
+      // マップ範囲外チェック
+      if (mapX < 0 || mapX >= GRID_WIDTH || mapY < 0 || mapY >= GRID_HEIGHT) {
+        continue;
+      }
+
+      const tileId = map.tiles[mapY][mapX];
       const color = TILE_COLOR[tileId] || '#000000';
 
       // タイルの背景色を描画
@@ -22,19 +34,34 @@ function drawMap() {
 function drawEntities() {
   const map = getCurrentMap();
 
-  // マップ上のエンティティを描画
-  for (let y = 0; y < GRID_HEIGHT; y++) {
-    for (let x = 0; x < GRID_WIDTH; x++) {
-      const entityId = map.entities[y][x];
+  // カメラ座標を計算
+  const camera = computeCameraLeftTop(Game.player.x, Game.player.y);
+
+  // 可視範囲のエンティティのみ描画
+  for (let y = 0; y < VIEW_ROWS; y++) {
+    for (let x = 0; x < VIEW_COLS; x++) {
+      // 実際のマップ座標
+      const mapX = camera.camLeft + x;
+      const mapY = camera.camTop + y;
+
+      // マップ範囲外チェック
+      if (mapX < 0 || mapX >= GRID_WIDTH || mapY < 0 || mapY >= GRID_HEIGHT) {
+        continue;
+      }
+
+      const entityId = map.entities[mapY][mapX];
       if (entityId !== ENTITY.NONE) {
         const emoji = getEmojiForEntity(entityId);
+        // 画面座標で描画
         drawEmoji(emoji, x, y);
       }
     }
   }
 
-  // プレイヤーを描画
-  drawEmoji(PLAYER_EMOJI, Game.player.x, Game.player.y);
+  // プレイヤーを画面中央に固定描画
+  const centerCol = Math.floor(VIEW_COLS / 2);
+  const centerRow = Math.floor(VIEW_ROWS / 2);
+  drawEmoji(PLAYER_EMOJI, centerCol, centerRow);
 }
 
 // UIを描画（メッセージ、ステータス、コマンド）
