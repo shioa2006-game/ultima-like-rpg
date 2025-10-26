@@ -4,7 +4,7 @@
 function drawMap() {
   const map = getCurrentMap();
 
-  // カメラ座標を計算
+  // カメラ座標を計算（プレイヤーを中心に配置）
   const camera = computeCameraLeftTop(Game.player.x, Game.player.y);
 
   // 可視範囲のタイルのみ描画（20x9グリッド、上部360pxに収める）
@@ -137,11 +137,21 @@ function render() {
   background(0);
 
   push();
-  // マップとエンティティを描画
+  // マップとエンティティを描画（カメラ追従システム適用）
   drawMap();
   drawEntities();
   pop();
 
   // UIを描画
   drawUI();
+
+  // デバッグ情報を画面に表示
+  push();
+  fill(255, 255, 0);
+  noStroke();
+  textSize(10);
+  textAlign(LEFT, TOP);
+  const camera = computeCameraLeftTop(Game.player.x, Game.player.y);
+  text(`Debug: Tile=${TILE_SIZE}px Camera=(${camera.camLeft},${camera.camTop}) Player=(${Game.player.x},${Game.player.y})`, 10, 5);
+  pop();
 }
