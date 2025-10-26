@@ -154,7 +154,7 @@ const MapData = {
     // 入口座標とワープ先
     warps: [
       { x: 11, y: 6, to: SCENE.VILLAGE, spawn: { x: 11, y: 15 } },  // 村入口
-      { x: 5, y: 9, to: SCENE.CAVE, spawn: { x: 11, y: 15 } }       // 洞窟入口
+      { x: 5, y: 9, to: SCENE.CAVE }       // 洞窟入口（スポーン位置はCAVEマップのspawnを使用）
     ],
     // 遺跡の座標（鍵が必要）
     ruins: [
@@ -176,14 +176,20 @@ const MapData = {
       { x: 11, y: 15, to: SCENE.FIELD, spawn: { x: 11, y: 7 } }  // 外への出口
     ],
     // 商人の座標
-    merchant: { x: 9, y: 7 }
+    merchant: { x: 9, y: 7 },
+    // 村のスポーン位置（フィールドから入った時の初期位置）
+    // 注意: 出口ワープ (11,15) の1つ上に配置して、即座にワープしないようにする
+    spawn: { x: 11, y: 14 }
   },
   [SCENE.CAVE]: {
     tiles: CAVE_TILES,
     entities: CAVE_ENTITIES,
     warps: [
       { x: 11, y: 15, to: SCENE.FIELD, spawn: { x: 5, y: 10 } }  // 外への出口
-    ]
+    ],
+    // 洞窟のスポーン位置（フィールドから入った時の初期位置）
+    // 注意: 出口ワープ (11,15) の1つ上に配置して、即座にワープしないようにする
+    spawn: { x: 11, y: 14 }
   }
 };
 
@@ -195,17 +201,29 @@ function getCurrentMap() {
 // 指定座標のタイルを取得（マップ座標専用、カメラ補正は不要）
 // 引数: x, y = マップ座標（0-23, 0-17）
 // 戻り値: タイルID（TILE.GRASS, TILE.WATER等）
+// デバッグモード: window.DEBUG_MAP_ACCESS = true で詳細ログを有効化
 function getTile(x, y) {
   const map = getCurrentMap();
-  if (!isInBounds(x, y)) return TILE.WATER;
-  return map.tiles[y][x];
+  if (!isInBounds(x, y, false)) { // isInBoundsのログを無効化
+    if (window.DEBUG_MAP_ACCESS) console.log(`getTile(${x}, ${y}): OUT OF BOUNDS -> returning TILE.WATER`);
+    return TILE.WATER;
+  }
+  const tile = map.tiles[y][x];
+  if (window.DEBUG_MAP_ACCESS) console.log(`getTile(${x}, ${y}): tiles[${y}][${x}] = ${tile}`);
+  return tile;
 }
 
 // 指定座標のエンティティを取得（マップ座標専用、カメラ補正は不要）
 // 引数: x, y = マップ座標（0-23, 0-17）
 // 戻り値: エンティティID（ENTITY.TREE, ENTITY.ROCK等）
+// デバッグモード: window.DEBUG_MAP_ACCESS = true で詳細ログを有効化
 function getEntity(x, y) {
   const map = getCurrentMap();
-  if (!isInBounds(x, y)) return ENTITY.NONE;
-  return map.entities[y][x];
+  if (!isInBounds(x, y, false)) { // isInBoundsのログを無効化
+    if (window.DEBUG_MAP_ACCESS) console.log(`getEntity(${x}, ${y}): OUT OF BOUNDS -> returning ENTITY.NONE`);
+    return ENTITY.NONE;
+  }
+  const entity = map.entities[y][x];
+  if (window.DEBUG_MAP_ACCESS) console.log(`getEntity(${x}, ${y}): entities[${y}][${x}] = ${entity}`);
+  return entity;
 }
