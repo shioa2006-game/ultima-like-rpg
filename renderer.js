@@ -1,5 +1,5 @@
 (function () {
-  // 画面描画全体を管理
+  // 描画担当
   window.Game = window.Game || {};
 
   const tileSize = Game.config.tileSize;
@@ -71,6 +71,9 @@
     p.push();
     p.translate(layout.mapOffsetX, layout.mapOffsetY);
     p.fill(255);
+    if (Game.entities && Game.entities.drawEnemies) {
+      Game.entities.drawEnemies(p, camera);
+    }
     Game.entities.drawEmoji(
       p,
       Game.entities.EMOJI_MAP.PLAYER,
@@ -152,7 +155,7 @@
     p.textSize(16);
     const lines = [
       "矢印キー: 移動　T:Talk　I:Items　U:Use　S:Status",
-      "B/S:ショップ操作　A/D/R:戦闘(未実装)　Esc:閉じる",
+      "A/D/R:戦闘コマンド　B/S:ショップ　Esc:閉じる",
     ];
     for (let i = 0; i < lines.length; i += 1) {
       p.text(lines[i], 12, y + 12 + i * 24);
@@ -178,10 +181,7 @@
     const buyOptions = Game.shop.getBuyOptions();
     const sellOptions = Game.shop.getSellOptions();
     const list = state.mode === "SELL" ? sellOptions : buyOptions;
-    const selection = Math.min(
-      state.selection,
-      Math.max(list.length - 1, 0)
-    );
+    const selection = Math.min(state.selection, Math.max(list.length - 1, 0));
     p.fill(255);
     p.textAlign(p.LEFT, p.TOP);
     p.textSize(18);
@@ -194,8 +194,7 @@
     );
     const startY = overlayArea.y + 80;
     if (!list.length) {
-      const emptyText =
-        state.mode === "SELL" ? "売れるものがない。" : "商品が準備中。";
+      const emptyText = state.mode === "SELL" ? "売れるものがない。" : "商品が準備中。";
       p.text(emptyText, overlayArea.x + 16, startY);
       return;
     }
@@ -228,10 +227,7 @@
     );
     p.textSize(16);
     const items = Game.state.player.inventory;
-    const selection = Math.min(
-      Game.ui.state.inventory.selection,
-      Math.max(items.length - 1, 0)
-    );
+    const selection = Math.min(Game.ui.state.inventory.selection, Math.max(items.length - 1, 0));
     const startY = overlayArea.y + 60;
     if (!items.length) {
       p.text("所持品は空だ。", overlayArea.x + 16, startY);
@@ -270,26 +266,36 @@
     }
   }
 
+  function drawBattleOverlay(p = window) {
+    if (!Game.combat.isActive()) return;
+    drawOverlayFrame(p);
+    const battle = Game.combat.getState();
+    const enemy = battle.enemy;
+    p.fill(255);
+    p.textAlign(p.LEFT, p.TOP);
+    p.textSize(20);
+    p.text(
+      `Enemy: ${enemy.emoji}  HP ${enemy.hp}/${enemy.maxHp}`,
+      overlayArea.x + 16,
+      overlayArea.y + 18
+    );
+    p.textSize(16);
+    p.text("A:Attack  D:Defend  R:Run", overlayArea.x + 16, overlayArea.y + 52);
+    p.text(
+      `プレイヤーHP: ${Game.state.player.hp}/${Game.state.player.maxHp}`,
+      overlayArea.x + 16,
+      overlayArea.y + 84
+    );
+  }
+
   function drawOverlayFrame(p) {
     p.push();
     p.noStroke();
-    p.fill(0, 180);
-    p.rect(
-      overlayArea.x,
-      overlayArea.y,
-      overlayArea.width,
-      overlayArea.height,
-      10
-    );
+    p.fill(0, 200);
+    p.rect(overlayArea.x, overlayArea.y, overlayArea.width, overlayArea.height, 10);
     p.stroke(220);
     p.noFill();
-    p.rect(
-      overlayArea.x,
-      overlayArea.y,
-      overlayArea.width,
-      overlayArea.height,
-      10
-    );
+    p.rect(overlayArea.x, overlayArea.y, overlayArea.width, overlayArea.height, 10);
     p.pop();
   }
 
@@ -299,5 +305,6 @@
     drawEntities,
     drawUI: drawPanels,
     drawOverlays,
+    drawBattleOverlay,
   };
 })();

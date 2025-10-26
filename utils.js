@@ -1,5 +1,5 @@
 (function () {
-  // 共通ユーティリティをGame名前空間に登録
+  // 共通ユーティリティ
   window.Game = window.Game || {};
 
   const utils = {
@@ -7,7 +7,7 @@
     clamp(value, min, max) {
       return Math.min(Math.max(value, min), max);
     },
-    // 座標オブジェクトの一致判定
+    // 座標の一致判定
     posEq(a, b) {
       return a && b && a.x === b.x && a.y === b.y;
     },
@@ -16,10 +16,27 @@
       if (!window.Game || !Game.TILE_BLOCKED) return false;
       return !!Game.TILE_BLOCKED[tileId];
     },
-    // 上下左右いずれかに隣接しているか判定
+    // 上下左右の隣接判定
     isAdjacent(a, b) {
       if (!a || !b) return false;
       return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+    },
+    // 距離（マンハッタン距離）
+    distance(a, b) {
+      if (!a || !b) return Infinity;
+      return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    },
+    // 整数乱数（包含範囲）
+    randInt(min, max) {
+      const low = Math.ceil(min);
+      const high = Math.floor(max);
+      return Math.floor(Math.random() * (high - low + 1)) + low;
+    },
+    // 配列からランダムに選択
+    choice(list) {
+      if (!list || !list.length) return null;
+      const index = utils.randInt(0, list.length - 1);
+      return list[index];
     },
   };
 

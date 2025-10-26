@@ -21,6 +21,8 @@
     "u": F.RUINS,
   };
 
+  const reservedChars = new Set(["d", "v", "h", "u"]);
+
   function normalizeRows(rows) {
     return rows.map((row) => row.replace(/\s+/g, ""));
   }
@@ -42,6 +44,18 @@
     rows.forEach((row, y) => {
       row.split("").forEach((ch, x) => {
         if (ch === charCode) list.push({ x, y });
+      });
+    });
+    return list;
+  }
+
+  function collectReservedPositions(rows) {
+    const list = [];
+    rows.forEach((row, y) => {
+      row.split("").forEach((ch, x) => {
+        if (reservedChars.has(ch)) {
+          list.push({ x, y });
+        }
       });
     });
     return list;
@@ -124,9 +138,14 @@
   const caveEntry = caveEntrances[0] || { x: 10, y: 1 };
   const villageDoor = villageDoors[0] || { x: 21, y: 15 };
 
+  const fieldReservedTiles = collectReservedPositions(FIELD_RAW);
+  const villageReservedTiles = collectReservedPositions(VILLAGE_RAW);
+  const caveReservedTiles = collectReservedPositions(CAVE_RAW);
+
   Game.mapData = {
     [scenes.FIELD]: {
       tiles: fieldTiles,
+      reservedTiles: fieldReservedTiles,
       spawnPoints: {
         default: { x: 2, y: 2 },
         fromVillage: { x: fieldVillageEntry.x, y: fieldVillageEntry.y + 1 },
@@ -149,6 +168,7 @@
     },
     [scenes.VILLAGE]: {
       tiles: villageTiles,
+      reservedTiles: villageReservedTiles,
       spawnPoints: {
         default: { x: villageDoor.x, y: villageDoor.y },
         fromField: { x: villageDoor.x - 1, y: villageDoor.y },
@@ -164,6 +184,7 @@
     },
     [scenes.CAVE]: {
       tiles: caveTiles,
+      reservedTiles: caveReservedTiles,
       spawnPoints: {
         default: { x: caveEntry.x, y: caveEntry.y + 1 },
         fromField: { x: caveEntry.x, y: caveEntry.y + 1 },

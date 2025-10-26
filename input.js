@@ -1,10 +1,16 @@
 (function () {
-  // 入力処理と移動ロジック
+  // 入力処理と移動／戦闘の制御
   window.Game = window.Game || {};
 
   const hungerScenes = new Set([Game.SCENE.FIELD, Game.SCENE.CAVE]);
 
   function handleKeyPressed(keyValue, keyCode) {
+    Game.occupancy.rebuild();
+    if (Game.combat.isActive()) {
+      handleBattleInput(keyValue, keyCode);
+      return;
+    }
+
     const overlay = Game.ui.state.overlay;
     if (overlay) {
       handleOverlayInput(overlay, keyValue, keyCode);
@@ -29,12 +35,7 @@
         Game.pushMessage("インベントリを開いてから使用しよう。");
         return;
       case "S":
-        openStatusOverlay();
-        return;
-      case "A":
-      case "D":
-      case "R":
-        Game.pushMessage("戦闘コマンドはまだ実装されていない。");
+        toggleStatusOverlay();
         return;
       default:
         break;
@@ -44,6 +45,25 @@
       Game.pushMessage("閉じる対象がない。");
     } else if (keyCode === window.ENTER) {
       Game.pushMessage("今は何も起きない。");
+    }
+  }
+
+  function handleBattleInput(keyValue, keyCode) {
+    const upper = (keyValue || "").toUpperCase();
+    if (upper === "A") {
+      Game.combat.playerAction("ATTACK");
+      return;
+    }
+    if (upper === "D") {
+      Game.combat.playerAction("DEFEND");
+      return;
+    }
+    if (upper === "R") {
+      Game.combat.playerAction("RUN");
+      return;
+    }
+    if (keyCode === window.ENTER) {
+      return;
     }
   }
 
@@ -103,11 +123,19 @@
     }
   }
 
-  function openStatusOverlay() {
+  function toggleStatusOverlay() {
     if (Game.ui.state.overlay === Game.ui.OVERLAY.STATUS) {
       Game.ui.close();
     } else {
       Game.ui.open(Game.ui.OVERLAY.STATUS);
+    }
+  }
+
+  function handleTalk() {
+    if (isAdjacentToNpc(Game.state.playerPos)) {
+      Game.shop.tryOpen();
+    } else {
+      Game.pushMessage("近くに話しかけられる相手がいない。");
     }
   }
 
@@ -131,6 +159,7 @@
       } else if (Game.ui.state.inventory.selection >= nextLength) {
         Game.ui.state.inventory.selection = nextLength - 1;
       }
+      Game.occupancy.markDirty();
     }
   }
 
@@ -149,32 +178,33 @@
     Game.pushMessage(Game.describeItem(itemId));
   }
 
-  function handleTalk() {
-    Game.shop.tryOpen();
-  }
-
   function tryMove(dx, dy) {
     if (!dx && !dy) return;
     const state = Game.state;
     const next = { x: state.playerPos.x + dx, y: state.playerPos.y + dy };
     if (!isInsideGrid(next)) {
-      Game.pushMessage("これ以上は進めない。");
+      Game.pushMessage("これ以上進めない。");
       return;
     }
-    const map = Game.getCurrentMap();
-    const tileId = map.tiles[next.y][next.x];
-    if (Game.utils.isBlocked(tileId)) {
-      if (tileId === Game.TILE.RUINS) {
-        Game.pushMessage("大きな扉には鍵が必要だ。");
+    Game.occupancy.rebuild();
+    const moveCheck = Game.occupancy.isFreeForPlayer(next.x, next.y);
+    if (!moveCheck.ok) {
+      if (moveCheck.enemy && moveCheck.enemyRef) {
+        Game.combat.startBattle(moveCheck.enemyRef);
+      } else if (moveCheck.warp && moveCheck.warpData) {
+        Game.occupancy.resolveTileEvent(next.x, next.y);
       } else {
-        Game.pushMessage("そこは通れない。");
+        Game.pushMessage("そこには進めない。");
       }
       return;
     }
 
     Game.setPlayerPosition(next);
     handleFoodCost();
-    handleTileEvent(tileId, next);
+    Game.entities.onPlayerStep();
+    Game.occupancy.markDirty();
+    Game.occupancy.rebuild();
+    Game.occupancy.resolveTileEvent(next.x, next.y);
   }
 
   function handleFoodCost() {
@@ -208,19 +238,22 @@
     }
   }
 
-  function handleTileEvent(tileId, position) {
-    const map = Game.getCurrentMap();
-    const entrances = map.entrances || [];
-    const found = entrances.find((entry) =>
-      Game.utils.posEq(entry.position, position)
-    );
-    if (found) {
-      Game.switchScene(found.targetScene, found.targetSpawn);
-      return;
+  function isAdjacentToNpc(pos) {
+    const deltas = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ];
+    for (const delta of deltas) {
+      const nx = pos.x + delta.x;
+      const ny = pos.y + delta.y;
+      const occ = Game.occupancy.get(nx, ny);
+      if (occ && occ.npc) {
+        return true;
+      }
     }
-    if (tileId === Game.TILE.ENTRANCE_VIL) {
-      Game.pushMessage("条件を満たせば通れるようだ。");
-    }
+    return false;
   }
 
   function isInsideGrid(pos) {
