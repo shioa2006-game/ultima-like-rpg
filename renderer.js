@@ -1,16 +1,17 @@
 // renderer.js - 描画処理
 
-// マップを描画
+// マップを描画（カメラ追従システム適用、描画専用）
+// 注意: カメラはここでのみ使用。移動ロジックには一切影響しない
 function drawMap() {
   const map = getCurrentMap();
 
-  // カメラ座標を計算（プレイヤーを中心に配置）
+  // カメラ座標を計算（プレイヤーを中心に配置、描画専用）
   const camera = computeCameraLeftTop(Game.player.x, Game.player.y);
 
-  // 可視範囲のタイルのみ描画（20x9グリッド、上部360pxに収める）
+  // 可視範囲のタイルのみ描画（VIEW_COLS x VIEW_ROWS = 20x9グリッド）
   for (let y = 0; y < VIEW_ROWS; y++) {
     for (let x = 0; x < VIEW_COLS; x++) {
-      // 実際のマップ座標
+      // カメラオフセットを加えてマップ座標に変換（描画時のみ）
       const mapX = camera.camLeft + x;
       const mapY = camera.camTop + y;
 
@@ -22,7 +23,7 @@ function drawMap() {
       const tileId = map.tiles[mapY][mapX];
       const color = TILE_COLOR[tileId] || '#000000';
 
-      // タイルの背景色を描画
+      // タイルの背景色を描画（画面座標 x, y に描画）
       fill(color);
       noStroke();
       rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -30,17 +31,18 @@ function drawMap() {
   }
 }
 
-// エンティティ（絵文字）を描画
+// エンティティ（絵文字）を描画（カメラ追従システム適用、描画専用）
+// 注意: カメラはここでのみ使用。移動ロジックには一切影響しない
 function drawEntities() {
   const map = getCurrentMap();
 
-  // カメラ座標を計算
+  // カメラ座標を計算（描画専用）
   const camera = computeCameraLeftTop(Game.player.x, Game.player.y);
 
-  // 可視範囲のエンティティのみ描画
+  // 可視範囲のエンティティのみ描画（VIEW_COLS x VIEW_ROWS = 20x9グリッド）
   for (let y = 0; y < VIEW_ROWS; y++) {
     for (let x = 0; x < VIEW_COLS; x++) {
-      // 実際のマップ座標
+      // カメラオフセットを加えてマップ座標に変換（描画時のみ）
       const mapX = camera.camLeft + x;
       const mapY = camera.camTop + y;
 
@@ -52,13 +54,13 @@ function drawEntities() {
       const entityId = map.entities[mapY][mapX];
       if (entityId !== ENTITY.NONE) {
         const emoji = getEmojiForEntity(entityId);
-        // 画面座標で描画
+        // 画面座標（x, y）で描画
         drawEmoji(emoji, x, y);
       }
     }
   }
 
-  // プレイヤーを画面中央に固定描画
+  // プレイヤーを画面中央に固定描画（カメラ追従の中心点）
   const centerCol = Math.floor(VIEW_COLS / 2);
   const centerRow = Math.floor(VIEW_ROWS / 2);
   drawEmoji(PLAYER_EMOJI, centerCol, centerRow);

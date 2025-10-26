@@ -15,12 +15,18 @@ function posEq(a, b) {
   return a.x === b.x && a.y === b.y;
 }
 
-// グリッド座標が範囲内かどうかをチェック
+// グリッド座標が範囲内かどうかをチェック（ロジック専用、カメラ無関係）
+// 引数: x, y = マップ座標（0-23, 0-17の範囲内かチェック）
+// 戻り値: 範囲内ならtrue、範囲外ならfalse
+// 注意: GRID_WIDTH(24) x GRID_HEIGHT(18)のマップ次元のみを使用
 function isInBounds(x, y) {
   return x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT;
 }
 
-// カメラ座標を計算（プレイヤーを中心に配置、マップ端では制限）
+// カメラ座標を計算（描画専用、ロジックには影響しない）
+// 引数: playerX, playerY = プレイヤーのマップ座標
+// 戻り値: { camLeft, camTop } = カメラ左上のマップ座標
+// 注意: この関数は描画時のみ使用。移動ロジックや衝突判定には絶対に使わない
 function computeCameraLeftTop(playerX, playerY) {
   // プレイヤーを画面中央に配置
   let camLeft = playerX - Math.floor(VIEW_COLS / 2);
