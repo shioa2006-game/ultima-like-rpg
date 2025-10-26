@@ -17,10 +17,15 @@ function posEq(a, b) {
 
 // グリッド座標が範囲内かどうかをチェック（ロジック専用、カメラ無関係）
 // 引数: x, y = マップ座標（0-23, 0-17の範囲内かチェック）
+//       debug = デバッグログを出力するか（デフォルト: true）
 // 戻り値: 範囲内ならtrue、範囲外ならfalse
 // 注意: GRID_WIDTH(24) x GRID_HEIGHT(18)のマップ次元のみを使用
-function isInBounds(x, y) {
-  return x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT;
+function isInBounds(x, y, debug = true) {
+  const result = x >= 0 && x < GRID_WIDTH && y >= 0 && y < GRID_HEIGHT;
+  if (debug) {
+    console.log(`isInBounds(${x}, ${y}): ${result} (GRID: ${GRID_WIDTH}x${GRID_HEIGHT})`);
+  }
+  return result;
 }
 
 // カメラ座標を計算（描画専用、ロジックには影響しない）
