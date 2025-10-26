@@ -192,14 +192,18 @@ function getCurrentMap() {
   return MapData[Game.currentScene];
 }
 
-// 指定座標のタイルを取得
+// 指定座標のタイルを取得（マップ座標専用、カメラ補正は不要）
+// 引数: x, y = マップ座標（0-23, 0-17）
+// 戻り値: タイルID（TILE.GRASS, TILE.WATER等）
 function getTile(x, y) {
   const map = getCurrentMap();
   if (!isInBounds(x, y)) return TILE.WATER;
   return map.tiles[y][x];
 }
 
-// 指定座標のエンティティを取得
+// 指定座標のエンティティを取得（マップ座標専用、カメラ補正は不要）
+// 引数: x, y = マップ座標（0-23, 0-17）
+// 戻り値: エンティティID（ENTITY.TREE, ENTITY.ROCK等）
 function getEntity(x, y) {
   const map = getCurrentMap();
   if (!isInBounds(x, y)) return ENTITY.NONE;

@@ -22,13 +22,10 @@ const TILE_COLOR = {
   [TILE.CAVE]: '#444444'
 };
 
-// 通行不可タイル
+// 通行不可タイル（タイル層の通行判定専用）
+// 注意: 山・岩・壁はエンティティ層に配置されているため、ここには含めない
 const TILE_BLOCKED = new Set([
-  TILE.WATER,
-  TILE.MOUNTAIN,
-  TILE.ROCK,
-  TILE.WALL,
-  TILE.RUINS
+  TILE.WATER  // タイル層で実際に通行不可として使用されるのはWATERのみ
 ]);
 
 // シーン種別

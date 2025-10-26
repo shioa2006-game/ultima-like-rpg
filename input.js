@@ -1,38 +1,41 @@
 // input.js - キー入力処理
 
-// プレイヤーの移動を試みる
+// プレイヤーの移動を試みる（ロジック専用、カメラ無関係）
+// 引数: dx, dy = 移動方向（-1, 0, 1のいずれか）
+// 戻り値: 移動成功ならtrue、失敗ならfalse
+// 注意: この関数はマップ座標（24x18）のみで判定。カメラやVIEW系定数は一切使わない
 function tryMove(dx, dy) {
   const newX = Game.player.x + dx;
   const newY = Game.player.y + dy;
 
-  // 範囲外チェック
+  // 範囲外チェック（マップ次元24x18で判定）
   if (!isInBounds(newX, newY)) {
     Game.pushMsg('これ以上進めません。');
     return false;
   }
 
-  // タイルの通行判定
+  // タイル層の通行判定（WATER等）
   const tileId = getTile(newX, newY);
   if (isBlocked(tileId)) {
     Game.pushMsg('そこには進めません。');
     return false;
   }
 
-  // エンティティの通行判定
+  // エンティティ層の通行判定（山・岩・壁等）
   const entityId = getEntity(newX, newY);
-  // 壁と岩と山は通れない
+  // 壁と岩と山は通れない（エンティティ層に配置されている障害物）
   if (entityId === ENTITY.WALL || entityId === ENTITY.MOUNTAIN || entityId === ENTITY.ROCK) {
     Game.pushMsg('障害物があります。');
     return false;
   }
 
-  // 遺跡のチェック
+  // 遺跡のチェック（エンティティ層）
   if (entityId === ENTITY.RUINS) {
     Game.pushMsg('鍵が必要です。（Phase 1で実装予定）');
     return false;
   }
 
-  // 移動成功
+  // 移動成功（マップ座標を更新）
   Game.player.x = newX;
   Game.player.y = newY;
 
