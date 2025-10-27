@@ -83,42 +83,42 @@
   ]);
 
   const VILLAGE_RAW = normalizeRows([
-    "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~",
-    "~ w w w w w w w w w w w w w w w w w w w w w w ~",
-    "~ w i i i i i i i i i i w r r r r r r r r r w ~",
-    "~ w i . . . . . . . i w r . . . . . . . . r w ~",
-    "~ w i . t t . . . . i w r . . . t t . . . r w ~",
-    "~ w i . . . . . . . i w r . . . . . . . . r w ~",
-    "~ w i . . . . . . . i w r . . . . . . . . r w ~",
-    "~ w i . . . . . . . i w r . . . . . . . . r w ~",
-    "~ w i i i i i i i i i w r . . . . . . . . r w ~",
-    "~ w w w w w w w w w w r r . . . . . . . . r w ~",
-    "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ r . . . . . . . . r w ~",
-    "~ r r r r r r r r r r r r . . . . . . . . r w ~",
-    "~ r . . . . . . . . . . . . . . . . . . . r w ~",
-    "~ r . . . . . . . . . . . . . . . . . . . r w ~",
-    "~ r . . . . . . . . . . . . . . . . . . . r w ~",
-    "~ r r r r r r r r r r r r r r r r r r r r d w ~",
-    "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ w ~",
-    "~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~",
+    "w w w w w w w w w w w w w w w w w w w w w w w w",
+    "w . . . t t . . . . . r . . . . . . . . t t . w",
+    "w . i i i i . . . t t r . i i i i . . . t t . w",
+    "w . i i i i . . . . . r . . . . . . . . . . . w",
+    "w . . . . . . . t t . r . . . . . t t . . . . w",
+    "w . . . . . . . . . . r . . . . . . . . . . . w",
+    "w . t t . . . . . . . r . . . . . . . . t t . w",
+    "w . . . . . . . . . . r . . . . . . . . . . . w",
+    "w r r r r r r r r r r r r r r r r r r r r r r w",
+    "w . . . . . . . . . . r . . . . . . . . . . . w",
+    "w . t t . . . . . . . r . . . . . . . . t t . w",
+    "w . . . . . . . . . . r . . . . . . . . . . . w",
+    "w . . . . . . . t t . r . . . . . t t . . . . w",
+    "w . i i i i . . . . . r . . . . . . . . . . . w",
+    "w . i i i i . . . t t r . i i i i . . . t t . w",
+    "w . . . . . . . . . . r . . . . . . . . . . . w",
+    "w . . . . . . . . . . r . . . . . . . . . . . w",
+    "w w w w w w w w w w w d w w w w w w w w w w w w",
   ]);
 
   const CAVE_RAW = normalizeRows([
     "s s s s s s s s s s s s s s s s s s s s s s s s",
     "s c c c c c c c c c h c c c c c c c c c c c c s",
-    "s c s s c c c c c s s c c c c c c c c c c c c s",
+    "s c s s c c c c c c c c c c c c c c c c c c c s",
     "s c c c c c s c c c c c c c c c c c s s s c c s",
     "s c c c c c s c c c c c c c c c c c c c c c c s",
     "s c c c c c s c c s s c c c c c c c c c c c c s",
     "s c c c c c c c c c c c c c c c c c c c c c c s",
     "s c c s s c c c c c c c c c c c c c c c c c c s",
     "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c s c c c c c s s c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c s s c c c c c s",
+    "s c c c c c c c s c c c c c c c c c c c c c c s",
     "s c c c c c c c c c c c c c c c c c c c c c c s",
     "s c c c c c c c c c c c c c c c c c c c c c c s",
-    "s c c c c c c c c c c c c c c c c c c c c c c s",
-    "s c c c c c c c c c c c c c c c c c c c c c c s",
-    "s c c c c c c c c c c c c c c c c c c c c c c s",
-    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c s s c c c c c c c s s c c c c c c c c s",
     "s c c c c c c c c c c c c c c c c c c c c c c s",
     "s c c c c c c c c c c c c c c c c c c c c c c s",
     "s s s s s s s s s s s s s s s s s s s s s s s s",
@@ -136,7 +136,7 @@
   const fieldVillageEntry = fieldVillageEntrances[0] || { x: 10, y: 8 };
   const fieldCaveEntry = fieldCaveEntrances[0] || { x: 18, y: 3 };
   const caveEntry = caveEntrances[0] || { x: 10, y: 1 };
-  const villageDoor = villageDoors[0] || { x: 21, y: 15 };
+  const villageDoor = villageDoors[0] || { x: 11, y: 17 };
 
   const fieldReservedTiles = collectReservedPositions(FIELD_RAW);
   const villageReservedTiles = collectReservedPositions(VILLAGE_RAW);
@@ -170,8 +170,8 @@
       tiles: villageTiles,
       reservedTiles: villageReservedTiles,
       spawnPoints: {
-        default: { x: villageDoor.x, y: villageDoor.y },
-        fromField: { x: villageDoor.x - 1, y: villageDoor.y },
+        default: { x: villageDoor.x, y: villageDoor.y - 1 },
+        fromField: { x: villageDoor.x, y: villageDoor.y - 1 },
       },
       entrances: [
         {
