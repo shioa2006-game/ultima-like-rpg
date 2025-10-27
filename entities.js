@@ -28,6 +28,8 @@
 
   const MIN_FIELD_ENEMIES = 3;
   const MAX_FIELD_ENEMIES = 5;
+  const MIN_CAVE_ENEMIES = 2;
+  const MAX_CAVE_ENEMIES = 4;
   const RESPAWN_STEP_THRESHOLD = 20;
   const SAFE_DISTANCE_FROM_PLAYER = 4;
 
@@ -59,6 +61,11 @@
       Game.occupancy.markDirty();
       Game.occupancy.rebuild();
       ensureFieldEnemies();
+    }
+    if (Game.state.scene === Game.SCENE.CAVE) {
+      Game.occupancy.markDirty();
+      Game.occupancy.rebuild();
+      ensureCaveEnemies();
     }
   }
 
@@ -92,9 +99,43 @@
     if (!map) return false;
     const position = findSpawnPosition(map);
     if (!position) return false;
-    const kind = pickEnemyKind(position, map);
+    const kind = pickEnemyKind(position, map, Game.SCENE.FIELD);
     if (!kind) return false;
     const enemy = createEnemyInstance(kind, position, Game.SCENE.FIELD);
+    Game.state.enemies.push(enemy);
+    Game.occupancy.markDirty();
+    return true;
+  }
+
+  function ensureCaveEnemies() {
+    const state = Game.state;
+    const current = state.enemies.filter((enemy) => enemy.scene === Game.SCENE.CAVE);
+    if (!Game.mapData || !Game.mapData[Game.SCENE.CAVE]) return;
+
+    if (state.scene !== Game.SCENE.CAVE) return;
+    if (state.scene === Game.SCENE.CAVE) {
+      Game.occupancy.markDirty();
+      Game.occupancy.rebuild();
+    }
+
+    const minNeeded = MIN_CAVE_ENEMIES;
+    const maxAllowed = MAX_CAVE_ENEMIES;
+    while (state.enemies.filter((e) => e.scene === Game.SCENE.CAVE).length < minNeeded) {
+      if (!spawnCaveEnemy()) break;
+    }
+    while (state.enemies.filter((e) => e.scene === Game.SCENE.CAVE).length < maxAllowed) {
+      if (!spawnCaveEnemy()) break;
+    }
+  }
+
+  function spawnCaveEnemy() {
+    const map = Game.mapData[Game.SCENE.CAVE];
+    if (!map) return false;
+    const position = findSpawnPositionForScene(map, Game.SCENE.CAVE);
+    if (!position) return false;
+    const kind = pickEnemyKind(position, map, Game.SCENE.CAVE);
+    if (!kind) return false;
+    const enemy = createEnemyInstance(kind, position, Game.SCENE.CAVE);
     Game.state.enemies.push(enemy);
     Game.occupancy.markDirty();
     return true;
@@ -125,41 +166,51 @@
   }
 
   function findSpawnPosition(map) {
+    return findSpawnPositionForScene(map, Game.SCENE.FIELD);
+  }
+
+  function findSpawnPositionForScene(map, scene) {
     const attempts = 200;
     for (let i = 0; i < attempts; i += 1) {
       const x = Game.utils.randInt(1, Game.config.gridWidth - 2);
       const y = Game.utils.randInt(1, Game.config.gridHeight - 2);
-      if (!Game.occupancy.isFreeForEnemy(x, y, Game.SCENE.FIELD)) continue;
-      if (Game.utils.distance(Game.state.playerPos, { x, y }) < SAFE_DISTANCE_FROM_PLAYER) continue;
+      if (!Game.occupancy.isFreeForEnemy(x, y, scene)) continue;
+      if (scene === Game.state.scene && Game.utils.distance(Game.state.playerPos, { x, y }) < SAFE_DISTANCE_FROM_PLAYER) continue;
       return { x, y };
     }
     return null;
   }
 
-  function pickEnemyKind(position, map) {
+  function pickEnemyKind(position, map, scene) {
     const tile = map.tiles[position.y][position.x];
-    if (isNearTile(position, Game.TILE.RUINS, 2)) {
-      return Game.utils.choice(["GHOST", "VAMPIRE"]);
+
+    // フィールド：SLIME, BAT, SPIDER のみ
+    if (scene === Game.SCENE.FIELD) {
+      if (tile === Game.TILE.TREE || isNearTile(position, Game.TILE.TREE, 1, scene)) {
+        return Game.utils.choice(["BAT", "SPIDER"]);
+      }
+      if (
+        tile === Game.TILE.MOUNTAIN ||
+        tile === Game.TILE.ROCK ||
+        isNearTile(position, Game.TILE.MOUNTAIN, 1, scene) ||
+        isNearTile(position, Game.TILE.ROCK, 1, scene)
+      ) {
+        return Game.utils.choice(["SPIDER"]);
+      }
+      return Game.utils.choice(["SLIME", "BAT"]);
     }
-    if (tile === Game.TILE.TREE || isNearTile(position, Game.TILE.TREE, 1)) {
-      return Game.utils.choice(["BAT", "SPIDER"]);
+
+    // 洞窟：GHOST, VAMPIRE, TROLL のみ
+    if (scene === Game.SCENE.CAVE) {
+      return Game.utils.choice(["GHOST", "VAMPIRE", "TROLL"]);
     }
-    if (
-      tile === Game.TILE.MOUNTAIN ||
-      tile === Game.TILE.ROCK ||
-      isNearTile(position, Game.TILE.MOUNTAIN, 1) ||
-      isNearTile(position, Game.TILE.ROCK, 1)
-    ) {
-      return Game.utils.choice(["SPIDER", "TROLL"]);
-    }
-    if (tile === Game.TILE.RUINS) {
-      return Game.utils.choice(["GHOST", "VAMPIRE"]);
-    }
-    return Game.utils.choice(["SLIME", "BAT"]);
+
+    // デフォルト（村など）
+    return null;
   }
 
-  function isNearTile(position, tileId, radius) {
-    const map = Game.mapData[Game.SCENE.FIELD];
+  function isNearTile(position, tileId, radius, scene) {
+    const map = Game.mapData[scene || Game.SCENE.FIELD];
     if (!map) return false;
     for (let dy = -radius; dy <= radius; dy += 1) {
       for (let dx = -radius; dx <= radius; dx += 1) {
@@ -203,15 +254,23 @@
 
   function onPlayerStep() {
     if (Game.battle.active) return;
-    if (Game.state.scene !== Game.SCENE.FIELD) {
+    if (Game.state.scene !== Game.SCENE.FIELD && Game.state.scene !== Game.SCENE.CAVE) {
       Game.state.enemyRespawnSteps = 0;
       return;
     }
     Game.state.enemyRespawnSteps += 1;
     if (Game.state.enemyRespawnSteps >= RESPAWN_STEP_THRESHOLD) {
-      if (Game.state.enemies.filter((e) => e.scene === Game.SCENE.FIELD && e.kind !== "DRAGON").length < MAX_FIELD_ENEMIES) {
-        spawnFieldEnemy();
-        Game.occupancy.markDirty();
+      if (Game.state.scene === Game.SCENE.FIELD) {
+        if (Game.state.enemies.filter((e) => e.scene === Game.SCENE.FIELD && e.kind !== "DRAGON").length < MAX_FIELD_ENEMIES) {
+          spawnFieldEnemy();
+          Game.occupancy.markDirty();
+        }
+      }
+      if (Game.state.scene === Game.SCENE.CAVE) {
+        if (Game.state.enemies.filter((e) => e.scene === Game.SCENE.CAVE).length < MAX_CAVE_ENEMIES) {
+          spawnCaveEnemy();
+          Game.occupancy.markDirty();
+        }
       }
       Game.state.enemyRespawnSteps = 0;
     }
@@ -245,6 +304,7 @@
     getTileOverlay,
     spawnInitialEnemies,
     ensureFieldEnemies,
+    ensureCaveEnemies,
     onPlayerStep,
     removeEnemyById,
     drawEnemies,
