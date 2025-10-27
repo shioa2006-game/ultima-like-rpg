@@ -38,6 +38,10 @@
       const index = utils.randInt(0, list.length - 1);
       return list[index];
     },
+    // シーンと座標から占有管理用のキーを生成
+    makePosKey(scene, x, y) {
+      return `${scene}:${x},${y}`;
+    },
   };
 
   Game.utils = utils;

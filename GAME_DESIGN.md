@@ -1,4 +1,4 @@
-# Ultima-like MVP Design (p5.js)
+﻿# Ultima-like MVP Design (p5.js)
 Version: 0.1 / Target: Browser / Canvas: 800x600 / Grid: 24x18 (tile 32px)
 
 ## 0. 目的（ゲームの目的）
@@ -130,3 +130,4 @@ HP/MaxHP, ATK, DEF, LV, EXP, Food, Gold, equip.weapon(ATK+), equip.shield(DEF+),
 - 商人拡張（価格変動/在庫/割引）
 - 装備上位・会心/状態異常
 - セーブ/ロード・BGM/SE・複数マップ
+

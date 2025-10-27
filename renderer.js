@@ -71,6 +71,7 @@
     p.push();
     p.translate(layout.mapOffsetX, layout.mapOffsetY);
     p.fill(255);
+    drawEventEntities(p, camera);
     if (Game.entities && Game.entities.drawEnemies) {
       Game.entities.drawEnemies(p, camera);
     }
@@ -97,6 +98,28 @@
       );
     }
     p.pop();
+  }
+
+  function drawEventEntities(p, camera) {
+    if (!Game.EVENTS) return;
+    const scene = Game.state.scene;
+    const events = Game.EVENTS[scene];
+    if (!events) return;
+    if (Array.isArray(events.chests)) {
+      events.chests.forEach((pos) => {
+        if (Game.hasOpened && Game.hasOpened(scene, pos.x, pos.y)) return;
+        Game.entities.drawEmoji(p, Game.entities.EMOJI_MAP.CHEST, pos.x, pos.y, {
+          offsetX: -camera.x,
+          offsetY: -camera.y,
+        });
+      });
+    }
+    if (events.ruins) {
+      Game.entities.drawEmoji(p, Game.entities.EMOJI_MAP.RUINS, events.ruins.x, events.ruins.y, {
+        offsetX: -camera.x,
+        offsetY: -camera.y,
+      });
+    }
   }
 
   function drawPanels(p = window) {
@@ -131,9 +154,11 @@
     p.fill(240);
     p.textAlign(p.LEFT, p.TOP);
     p.textSize(16);
+    const keyStatus = Game.flags && Game.flags.hasKey ? "Yes" : "No";
     const lines = [
       `HP: ${player.hp}/${player.maxHp}    LV: ${player.lv}    EXP: ${player.exp}`,
       `Food: ${player.food}    Gold: ${player.gold}`,
+      `KEY: ${keyStatus}`,
       `ATK/DEF: ${stats.atk} / ${stats.def}`,
       `Weapon: ${player.equip.weapon ? "Bronze Sword" : "-"}    Shield: ${
         player.equip.shield ? "Wood Shield" : "-"
@@ -288,6 +313,30 @@
     );
   }
 
+  function drawClearOverlay(p = window) {
+    if (!Game.flags || !Game.flags.cleared) return;
+    p.push();
+    p.noStroke();
+    p.fill(0, 220);
+    p.rect(0, 0, Game.config.canvasWidth, Game.config.canvasHeight);
+    p.fill(255);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.textSize(30);
+    p.text("CONGRATULATIONS!", Game.config.canvasWidth / 2, Game.config.canvasHeight / 2 - 50);
+    p.textSize(18);
+    p.text(
+      "Ancient Key で遺跡の門を開いた。Thanks for playing.",
+      Game.config.canvasWidth / 2,
+      Game.config.canvasHeight / 2
+    );
+    p.text(
+      "Enter: 最初からやり直す",
+      Game.config.canvasWidth / 2,
+      Game.config.canvasHeight / 2 + 40
+    );
+    p.pop();
+  }
+
   function drawOverlayFrame(p) {
     p.push();
     p.noStroke();
@@ -306,5 +355,6 @@
     drawUI: drawPanels,
     drawOverlays,
     drawBattleOverlay,
+    drawClearOverlay,
   };
 })();

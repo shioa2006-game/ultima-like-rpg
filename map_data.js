@@ -199,4 +199,13 @@
       ],
     },
   };
+
+  Game.EVENTS = {
+    [scenes.CAVE]: {
+      chests: [{ x: 10, y: 8 }],
+    },
+    [scenes.FIELD]: {
+      ruins: { x: 5, y: 5 },
+    },
+  };
 })();

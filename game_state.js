@@ -56,7 +56,6 @@
     [TILE.MOUNTAIN]: true,
     [TILE.ROCK]: true,
     [TILE.WALL]: true,
-    [TILE.RUINS]: true,
   };
 
   const sceneLabels = {
@@ -124,6 +123,12 @@
   const occupancyMap = new Map();
   const enemyRestricted = new Set();
   let occupancyDirty = true;
+
+  const progressFlags = {
+    hasKey: false,
+    openedChests: new Set(),
+    cleared: false,
+  };
 
   // ------------------------------------------------------------------
   // 敵とレベル情報
@@ -215,7 +220,6 @@
       pos: { x: 12, y: 9 },
     },
     flags: {
-      hasKey: false,
       starvingNotified: false,
       dragonDefeated: false,
     },
@@ -235,6 +239,27 @@
 
   function keyOf(x, y) {
     return `${x},${y}`;
+  }
+
+  function resetProgressFlags() {
+    progressFlags.hasKey = false;
+    progressFlags.cleared = false;
+    progressFlags.openedChests.clear();
+  }
+
+  function makePosKey(scene, x, y) {
+    if (Game.utils && typeof Game.utils.makePosKey === "function") {
+      return Game.utils.makePosKey(scene, x, y);
+    }
+    return `${scene}:${x},${y}`;
+  }
+
+  function hasOpenedChest(scene, x, y) {
+    return progressFlags.openedChests.has(makePosKey(scene, x, y));
+  }
+
+  function markChestOpened(scene, x, y) {
+    progressFlags.openedChests.add(makePosKey(scene, x, y));
   }
 
   function clearOccupancy() {
@@ -259,6 +284,8 @@
     if (meta.warpData) existing.warpData = meta.warpData;
     existing.npc = existing.npc || !!meta.npc;
     existing.enemy = existing.enemy || !!meta.enemy;
+    existing.chest = existing.chest || !!meta.chest;
+    existing.ruins = existing.ruins || !!meta.ruins;
     if (meta.enemyRef) existing.enemyRef = meta.enemyRef;
     existing.player = existing.player || !!meta.player;
     existing.tileId = meta.tileId || existing.tileId;
@@ -308,6 +335,30 @@
           occupyCell(pos.x, pos.y, { layer: LAYER.STATIC, reserved: true });
           markEnemyRestrictedArea(pos.x, pos.y);
         });
+      }
+      const sceneEvents = Game.EVENTS ? Game.EVENTS[state.scene] : null;
+      if (sceneEvents) {
+        if (Array.isArray(sceneEvents.chests)) {
+          sceneEvents.chests.forEach((pos) => {
+            if (hasOpenedChest(state.scene, pos.x, pos.y)) return;
+            occupyCell(pos.x, pos.y, {
+              layer: LAYER.STATIC,
+              reserved: true,
+              chest: true,
+            });
+            markEnemyRestrictedArea(pos.x, pos.y);
+          });
+        }
+        if (sceneEvents.ruins) {
+          const pos = sceneEvents.ruins;
+          occupyCell(pos.x, pos.y, {
+            layer: LAYER.STATIC,
+            reserved: true,
+            ruins: true,
+            warp: true,
+          });
+          markEnemyRestrictedArea(pos.x, pos.y);
+        }
       }
     }
     if (state.merchant.scene === state.scene) {
@@ -398,13 +449,17 @@
   }
 
   function initializeGame() {
+    resetForNewGame();
+  }
+
+  function resetForNewGame() {
+    resetProgressFlags();
     state.scene = SCENE.FIELD;
     state.walkCounter = 0;
     state.enemyRespawnSteps = 0;
     state.enemyIdSeq = 0;
     state.enemies = [];
     state.player = createDefaultPlayer();
-    state.flags.hasKey = false;
     state.flags.starvingNotified = false;
     state.flags.dragonDefeated = false;
     state.messages = [];
@@ -540,6 +595,44 @@
     if (occ.warp && occ.warpData) {
       Game.switchScene(occ.warpData.targetScene, occ.warpData.targetSpawn);
     }
+    if (occ.chest) {
+      handleChestEvent(state.scene, x, y);
+      return;
+    }
+    if (occ.ruins) {
+      handleRuinsEvent(state.scene, x, y);
+    }
+  }
+
+  function handleChestEvent(scene, x, y) {
+    if (hasOpenedChest(scene, x, y)) {
+      Game.pushMessage("すでに開けた宝箱だ。");
+      return;
+    }
+    markChestOpened(scene, x, y);
+    progressFlags.hasKey = true;
+    Game.pushMessage("宝箱を開けた！Ancient Key を手に入れた。");
+    Game.occupancy.markDirty();
+  }
+
+  function handleRuinsEvent(scene, x, y) {
+    if (progressFlags.cleared) {
+      Game.pushMessage("扉はすでに開いている。");
+      return;
+    }
+    if (!progressFlags.hasKey) {
+      Game.pushMessage("重い扉だ…鍵が必要だ。");
+      return;
+    }
+    progressFlags.cleared = true;
+    Game.pushMessage("扉が開いた！");
+    Game.ui.close();
+    Game.battle.active = false;
+    Game.battle.enemy = null;
+    Game.battle.playerDefending = false;
+    Game.battle.turn = "PLAYER";
+    Game.battle.returnScene = null;
+    Game.battle.returnPos = null;
   }
 
   // ------------------------------------------------------------------
@@ -779,6 +872,7 @@
   Game.TILE_BLOCKED = TILE_BLOCKED;
   Game.sceneLabels = sceneLabels;
   Game.state = state;
+  Game.flags = progressFlags;
   Game.pushMessage = pushMessage;
   Game.setPlayerPosition = setPlayerPosition;
   Game.getCurrentMap = getCurrentMap;
@@ -803,6 +897,10 @@
   Game.isItemEquipped = isItemEquipped;
   Game.grantExp = grantExp;
   Game.resetPlayerToSafePoint = resetPlayerToSafePoint;
+  Game.resetForNewGame = resetForNewGame;
+  Game.makePosKey = makePosKey;
+  Game.hasOpened = hasOpenedChest;
+  Game.markOpened = markChestOpened;
   Game.nextEnemyInstanceId = nextEnemyInstanceId;
   Game.ENEMY_DATA = ENEMY_DATA;
   Game.LV_THRESH = LV_THRESH;

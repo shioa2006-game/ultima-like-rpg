@@ -13,6 +13,7 @@
     DOOR: "🚪",
     WALL: "🧱",
     RUINS: "🏛️",
+    CHEST: "📦",
   };
 
   const tileOverlay = {

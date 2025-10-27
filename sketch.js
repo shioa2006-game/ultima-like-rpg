@@ -16,8 +16,15 @@ function draw() {
   Game.renderer.drawUI();
   Game.renderer.drawOverlays();
   Game.renderer.drawBattleOverlay();
+  Game.renderer.drawClearOverlay();
 }
 
 function keyPressed() {
+  if (Game.flags && Game.flags.cleared) {
+    if (keyCode === ENTER) {
+      Game.resetForNewGame();
+    }
+    return;
+  }
   Game.input.handleKeyPressed(key, keyCode);
 }
