@@ -131,15 +131,15 @@
   const ENEMY_DATA = {
     SLIME: {
       emoji: "🫠",
-      hp: [10, 14],
+      hp: [8, 12],
       atk: [2, 3],
       def: [0, 0],
-      exp: [4, 6],
-      gold: [6, 10],
+      exp: [3, 5],
+      gold: [4, 8],
     },
     BAT: {
       emoji: "🦇",
-      hp: [12, 16],
+      hp: [14, 18],
       atk: [3, 4],
       def: [0, 1],
       exp: [6, 8],
@@ -147,35 +147,35 @@
     },
     SPIDER: {
       emoji: "🕷",
-      hp: [18, 22],
-      atk: [4, 5],
+      hp: [20, 26],
+      atk: [4, 6],
       def: [1, 2],
-      exp: [8, 10],
-      gold: [10, 14],
+      exp: [9, 12],
+      gold: [12, 16],
     },
     GHOST: {
       emoji: "👻",
-      hp: [22, 26],
-      atk: [5, 6],
-      def: [1, 2],
-      exp: [10, 12],
-      gold: [12, 16],
+      hp: [28, 34],
+      atk: [6, 7],
+      def: [2, 3],
+      exp: [12, 16],
+      gold: [16, 20],
     },
     VAMPIRE: {
       emoji: "🧛‍♂️",
-      hp: [30, 36],
-      atk: [6, 7],
-      def: [2, 3],
-      exp: [14, 18],
-      gold: [16, 22],
+      hp: [36, 44],
+      atk: [7, 9],
+      def: [3, 4],
+      exp: [18, 24],
+      gold: [22, 28],
     },
     TROLL: {
       emoji: "🧌",
-      hp: [38, 46],
-      atk: [7, 8],
-      def: [3, 4],
-      exp: [18, 24],
-      gold: [20, 28],
+      hp: [48, 58],
+      atk: [9, 11],
+      def: [4, 5],
+      exp: [24, 32],
+      gold: [28, 36],
     },
     DRAGON: {
       emoji: "🐉",
@@ -390,6 +390,9 @@
     pushMessage(`${sceneLabels[nextScene]}へ移動した。`);
     if (nextScene === SCENE.FIELD && Game.entities && Game.entities.ensureFieldEnemies) {
       Game.entities.ensureFieldEnemies();
+    }
+    if (nextScene === SCENE.CAVE && Game.entities && Game.entities.ensureCaveEnemies) {
+      Game.entities.ensureCaveEnemies();
     }
     markOccupancyDirty();
   }
