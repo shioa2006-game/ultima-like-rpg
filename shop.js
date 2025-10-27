@@ -46,7 +46,11 @@
       return;
     }
     if (upper === "S") {
-      changeMode("SELL");
+      if (shopState.mode !== "SELL") {
+        changeMode("SELL");
+      } else {
+        handleSell();
+      }
       return;
     }
     if (keyCode === window.UP_ARROW) {
