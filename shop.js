@@ -137,7 +137,7 @@
     return inventory.map((itemId, index) => {
       const meta = Game.ITEM_META[itemId];
       const price = Math.floor((Game.PRICE[itemId] || 0) / 2);
-      const equipped = Game.isItemEquipped(itemId);
+      const equipped = Game.isItemEquipped(index);
       let canSell = price > 0 && !equipped;
       let reason = null;
       if (equipped) reason = "装備中は売却不可。";
