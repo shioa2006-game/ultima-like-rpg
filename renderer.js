@@ -212,43 +212,50 @@
 
   function drawShopOverlay(p) {
     drawOverlayFrame(p);
-    const header = "SHOP  B:Buy  S:Sell  ESC:Close";
     const state = Game.shop.getState();
     const buyOptions = Game.shop.getBuyOptions();
     const sellOptions = Game.shop.getSellOptions();
-    const list = state.mode === "SELL" ? sellOptions : buyOptions;
+    const isSellMode = state.mode === "SELL";
+    const list = isSellMode ? sellOptions : buyOptions;
     const selection = Math.min(state.selection, Math.max(list.length - 1, 0));
     p.fill(255);
     p.textAlign(p.LEFT, p.TOP);
     p.textSize(18);
-    p.text(header, overlayArea.x + 16, overlayArea.y + 14);
+    p.text("SHOP", overlayArea.x + 16, overlayArea.y + 14);
     p.textSize(16);
     p.text(
-      `表示: ${state.mode === "SELL" ? "Sell" : "Buy"}一覧`,
+      `表示:${isSellMode ? "Sell" : "Buy"}一覧`,
       overlayArea.x + 16,
       overlayArea.y + 44
     );
-    const startY = overlayArea.y + 80;
+    let contentY = overlayArea.y + 68;
+    p.text("いらっしゃいませ。", overlayArea.x + 16, contentY);
+    contentY += 48;
     if (!list.length) {
-      const emptyText = state.mode === "SELL" ? "売れるものがない。" : "商品が準備中。";
-      p.text(emptyText, overlayArea.x + 16, startY);
-      return;
+      const emptyText = isSellMode ? "売れるものがない。" : "ただいま準備中です。";
+      p.text(emptyText, overlayArea.x + 16, contentY);
+    } else {
+      list.forEach((item, index) => {
+        const caret = index === selection ? ">" : " ";
+        let line = "";
+        if (isSellMode) {
+          const equippedMark = item.equipped ? " (装備中)" : "";
+          const detail = item.detail ? `(${item.detail})` : "";
+          const priceText = item.canSell ? `Sell ${item.price}G` : "Sell不可";
+          line = `${caret} ${item.name}${detail}${equippedMark} — ${priceText}`;
+        } else {
+          const detail = item.detail ? `(${item.detail})` : "";
+          line = `${caret} ${item.name}${detail} — ${item.price}G`;
+        }
+        const y = contentY + index * 24;
+        p.text(line, overlayArea.x + 16, y);
+      });
     }
-    list.forEach((item, index) => {
-      const caret = index === selection ? ">" : " ";
-      let line = "";
-      if (state.mode === "SELL") {
-        const equippedMark = item.equipped ? " (装備中)" : "";
-        const detail = item.detail ? `(${item.detail})` : "";
-        const priceText = item.canSell ? `Sell ${item.price}G` : "Sell不可";
-        line = `${caret} ${item.name}${detail}${equippedMark} — ${priceText}`;
-      } else {
-        const detail = item.detail ? `(${item.detail})` : "";
-        line = `${caret} ${item.name}${detail} — ${item.price}G`;
-      }
-      const y = startY + index * 24;
-      p.text(line, overlayArea.x + 16, y);
-    });
+    p.text(
+      "B:買う S:売る ESC:閉じる",
+      overlayArea.x + 16,
+      overlayArea.y + overlayArea.height - 40
+    );
   }
 
   function drawInventoryOverlay(p) {
@@ -304,21 +311,17 @@
 
   function drawInnOverlay(p) {
     drawOverlayFrame(p);
-    const player = Game.state.player;
     p.fill(255);
     p.textAlign(p.LEFT, p.TOP);
     p.textSize(18);
-    p.text("INN  宿屋", overlayArea.x + 16, overlayArea.y + 14);
+    p.text("INN", overlayArea.x + 16, overlayArea.y + 14);
     p.textSize(16);
     const lines = [
       "",
       "いらっしゃいませ。",
       "一晩10Gで泊まっていきますか？",
       "",
-      `現在のHP: ${player.hp}/${player.maxHp}`,
-      `所持金: ${player.gold}G`,
-      "",
-      "Y: 泊まる　N: やめる　ESC: 閉じる",
+      "Y:泊まる N:やめる ESC:閉じる",
     ];
     for (let i = 0; i < lines.length; i += 1) {
       p.text(lines[i], overlayArea.x + 16, overlayArea.y + 50 + i * 24);
