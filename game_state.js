@@ -101,6 +101,7 @@
     SHOP: "SHOP",
     INVENTORY: "INVENTORY",
     STATUS: "STATUS",
+    INN: "INN",
   };
 
   const LAYER = {
@@ -218,6 +219,10 @@
     merchant: {
       scene: SCENE.VILLAGE,
       pos: { x: 12, y: 9 },
+    },
+    innkeeper: {
+      scene: SCENE.VILLAGE,
+      pos: { x: 12, y: 10 },
     },
     flags: {
       starvingNotified: false,
@@ -363,6 +368,12 @@
     }
     if (state.merchant.scene === state.scene) {
       occupyCell(state.merchant.pos.x, state.merchant.pos.y, {
+        layer: LAYER.NPC,
+        npc: true,
+      });
+    }
+    if (state.innkeeper.scene === state.scene) {
+      occupyCell(state.innkeeper.pos.x, state.innkeeper.pos.y, {
         layer: LAYER.NPC,
         npc: true,
       });
@@ -576,6 +587,9 @@
       }
     }
     if (state.merchant.scene === scene && state.merchant.pos.x === x && state.merchant.pos.y === y) {
+      return false;
+    }
+    if (state.innkeeper.scene === scene && state.innkeeper.pos.x === x && state.innkeeper.pos.y === y) {
       return false;
     }
     if (scene === state.scene && state.playerPos.x === x && state.playerPos.y === y) {
