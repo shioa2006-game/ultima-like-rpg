@@ -152,18 +152,18 @@
 
   function findDragonSpot() {
     const map = Game.mapData[Game.SCENE.FIELD];
-    if (!map) return { x: 5, y: 5 };
+    if (!map) return { x: 5, y: 6 };
     for (let y = 0; y < Game.config.gridHeight; y += 1) {
       for (let x = 0; x < Game.config.gridWidth; x += 1) {
         if (map.tiles[y][x] === Game.TILE.RUINS) {
-          const candidate = { x: Math.max(1, x - 1), y };
-          if (!Game.TILE_BLOCKED[map.tiles[candidate.y][candidate.x]]) {
+          const candidate = { x, y: y + 1 };
+          if (candidate.y < Game.config.gridHeight && !Game.TILE_BLOCKED[map.tiles[candidate.y][candidate.x]]) {
             return candidate;
           }
         }
       }
     }
-    return { x: 5, y: 5 };
+    return { x: 5, y: 6 };
   }
 
   function findSpawnPosition(map) {
