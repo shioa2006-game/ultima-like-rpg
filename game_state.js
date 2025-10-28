@@ -25,6 +25,7 @@
     WATER: "WATER",
     FLOOR_IN: "FLOOR_IN",
     FLOOR_CAVE: "FLOOR_CAVE",
+    FLOOR_SHOP: "FLOOR_SHOP",
     MOUNTAIN: "MOUNTAIN",
     ROCK: "ROCK",
     TREE: "TREE",
@@ -41,6 +42,7 @@
     [TILE.WATER]: "#2F6DD5",
     [TILE.FLOOR_IN]: "#8B4B4B",
     [TILE.FLOOR_CAVE]: "#444444",
+    [TILE.FLOOR_SHOP]: "#5A3A2A",
     [TILE.MOUNTAIN]: "#5B4E3A",
     [TILE.ROCK]: "#555555",
     [TILE.TREE]: "#5DA147",
@@ -218,11 +220,11 @@
     player: createDefaultPlayer(),
     merchant: {
       scene: SCENE.VILLAGE,
-      pos: { x: 12, y: 9 },
+      pos: { x: 13, y: 3 },
     },
     innkeeper: {
       scene: SCENE.VILLAGE,
-      pos: { x: 12, y: 10 },
+      pos: { x: 9, y: 3 },
     },
     flags: {
       starvingNotified: false,
