@@ -84,7 +84,7 @@
   ]);
 
   const VILLAGE_RAW = normalizeRows([
-    "w w w w w w w w w w w w w w w w w w w w w w w w",
+    "w w w w w w w w w w w d w w w w w w w w w w w w",
     "w . . . . . . w w w w r w w w w . . . . . . . w",
     "w . . . . . . w f f f r f f f w . . . . . . . w",
     "w . . t . . . w f f f r f f f w . . . . . . . w",
@@ -137,7 +137,51 @@
   const fieldVillageEntry = fieldVillageEntrances[0] || { x: 10, y: 8 };
   const fieldCaveEntry = fieldCaveEntrances[0] || { x: 18, y: 3 };
   const caveEntry = caveEntrances[0] || { x: 10, y: 1 };
-  const villageDoor = villageDoors[0] || { x: 11, y: 17 };
+
+  const defaultVillageDoor = { x: 11, y: 17 };
+  // 村の扉座標を南北で抽出
+  const villageDoorSouth =
+    villageDoors.reduce((result, pos) => {
+      if (!result || pos.y > result.y) {
+        return { x: pos.x, y: pos.y };
+      }
+      return result;
+    }, null) || defaultVillageDoor;
+  const villageDoorNorth =
+    villageDoors.reduce((result, pos) => {
+      if (!result || pos.y < result.y) {
+        return { x: pos.x, y: pos.y };
+      }
+      return result;
+    }, null) || { x: villageDoorSouth.x, y: villageDoorSouth.y };
+
+  // フィールドへ戻る際の出現位置を扉ごとに定義
+  const fieldSpawnFromVillageSouth = {
+    x: fieldVillageEntry.x,
+    y: Math.min(fieldVillageEntry.y + 1, Game.config.gridHeight - 1),
+  };
+  const fieldSpawnFromVillageNorth = {
+    x: fieldVillageEntry.x,
+    y: Math.max(fieldVillageEntry.y - 1, 0),
+  };
+
+  // 村内の扉ごとにフィールド遷移設定を作成
+  const villageEntrances = [
+    {
+      tile: F.DOOR,
+      position: { x: villageDoorSouth.x, y: villageDoorSouth.y },
+      targetScene: scenes.FIELD,
+      targetSpawn: "fromVillageSouth",
+    },
+  ];
+  if (villageDoorNorth.x !== villageDoorSouth.x || villageDoorNorth.y !== villageDoorSouth.y) {
+    villageEntrances.push({
+      tile: F.DOOR,
+      position: { x: villageDoorNorth.x, y: villageDoorNorth.y },
+      targetScene: scenes.FIELD,
+      targetSpawn: "fromVillageNorth",
+    });
+  }
 
   const fieldReservedTiles = collectReservedPositions(FIELD_RAW);
   const villageReservedTiles = collectReservedPositions(VILLAGE_RAW);
@@ -149,7 +193,9 @@
       reservedTiles: fieldReservedTiles,
       spawnPoints: {
         default: { x: 2, y: 2 },
-        fromVillage: { x: fieldVillageEntry.x, y: fieldVillageEntry.y + 1 },
+        fromVillage: { x: fieldSpawnFromVillageSouth.x, y: fieldSpawnFromVillageSouth.y },
+        fromVillageSouth: { x: fieldSpawnFromVillageSouth.x, y: fieldSpawnFromVillageSouth.y },
+        fromVillageNorth: { x: fieldSpawnFromVillageNorth.x, y: fieldSpawnFromVillageNorth.y },
         fromCave: { x: fieldCaveEntry.x, y: fieldCaveEntry.y + 1 },
       },
       entrances: [
@@ -171,17 +217,16 @@
       tiles: villageTiles,
       reservedTiles: villageReservedTiles,
       spawnPoints: {
-        default: { x: villageDoor.x, y: villageDoor.y - 1 },
-        fromField: { x: villageDoor.x, y: villageDoor.y - 1 },
-      },
-      entrances: [
-        {
-          tile: F.DOOR,
-          position: villageDoor,
-          targetScene: scenes.FIELD,
-          targetSpawn: "fromVillage",
+        default: {
+          x: villageDoorSouth.x,
+          y: Math.max(villageDoorSouth.y - 1, 0),
         },
-      ],
+        fromField: {
+          x: villageDoorSouth.x,
+          y: Math.max(villageDoorSouth.y - 1, 0),
+        },
+      },
+      entrances: villageEntrances,
     },
     [scenes.CAVE]: {
       tiles: caveTiles,

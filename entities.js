@@ -254,7 +254,55 @@
     return Game.state.enemies.some((enemy) => enemy.scene === targetScene && enemy.pos.x === x && enemy.pos.y === y);
   }
 
-  function onPlayerStep() {
+  // プレイヤーに接近させる敵の移動処理
+
+  // プレイヤーに接近させる敵の移動処理
+
+  // プレイヤーに接近させる敵の移動処理
+  function moveEnemiesTowardPlayer() {
+    const scene = Game.state.scene;
+    if (scene !== Game.SCENE.FIELD && scene !== Game.SCENE.CAVE) return;
+    const playerPos = Game.state.playerPos;
+    const enemies = Game.state.enemies.filter(
+      (enemy) => enemy.scene === scene && enemy.kind !== "DRAGON"
+    );
+    if (!enemies.length) return;
+    Game.occupancy.rebuild();
+    const reserved = new Set();
+    const keyOf = (x, y) => `${x},${y}`;
+    for (let i = 0; i < enemies.length; i += 1) {
+      if (Game.combat.isActive()) break;
+      const enemy = enemies[i];
+      const dist = Game.utils.distance(enemy.pos, playerPos);
+      if (dist >= 7) continue;
+      const path = Game.utils.findPath(enemy.pos, playerPos, {
+        scene,
+        allowGoalOccupied: true,
+        canEnter(x, y) {
+          if (x === enemy.pos.x && y === enemy.pos.y) return true;
+          const key = keyOf(x, y);
+          if (reserved.has(key) && !(x === enemy.pos.x && y === enemy.pos.y)) {
+            return false;
+          }
+          if (!Game.occupancy || typeof Game.occupancy.isFreeForEnemy !== "function") {
+            return true;
+          }
+          return Game.occupancy.isFreeForEnemy(x, y, scene);
+        },
+      });
+      if (!path || path.length < 2) continue;
+      const nextStep = path[1];
+      if (nextStep.x === enemy.pos.x && nextStep.y === enemy.pos.y) continue;
+      enemy.pos.x = nextStep.x;
+      enemy.pos.y = nextStep.y;
+      reserved.add(keyOf(enemy.pos.x, enemy.pos.y));
+      if (enemy.pos.x === playerPos.x && enemy.pos.y === playerPos.y) {
+        Game.combat.startBattle(enemy);
+        break;
+      }
+    }
+  }
+function onPlayerStep() {
     if (Game.battle.active) return;
     if (Game.state.scene !== Game.SCENE.FIELD && Game.state.scene !== Game.SCENE.CAVE) {
       Game.state.enemyRespawnSteps = 0;
@@ -276,6 +324,8 @@
       }
       Game.state.enemyRespawnSteps = 0;
     }
+    moveEnemiesTowardPlayer();
+
   }
 
   function removeEnemyById(enemyId) {
