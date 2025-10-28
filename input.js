@@ -229,7 +229,8 @@
         state.player.hp = Math.max(0, state.player.hp - 1);
         Game.pushMessage("飢えでHPが減った。");
         if (state.player.hp === 0) {
-          Game.pushMessage("力尽きそうだ…");
+          Game.pushMessage("飢えで力尽きた…。");
+          Game.resetPlayerToSafePoint();
         }
       } else if (!state.flags.starvingNotified) {
         Game.pushMessage("急いで補給しよう。");
