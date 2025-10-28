@@ -86,7 +86,7 @@
   const VILLAGE_RAW = normalizeRows([
     "w w w w w w w w w w w w w w w w w w w w w w w w",
     "w . . . . . . w w w w r w w w w . . . . . . . w",
-    "w . . . . . . w f f f r f f f w . . . . t . . w",
+    "w . . . . . . w f f f r f f f w . . . . . . . w",
     "w . . t . . . w f f f r f f f w . . . . . . . w",
     "w . . . . . . w f f f r f f f w . . . . . . . w",
     "w . . . . . . w w w w r w w w w . . . . . . . w",
