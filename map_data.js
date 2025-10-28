@@ -19,10 +19,11 @@
     "f": F.FLOOR_SHOP,
     "v": F.ENTRANCE_VIL,
     "h": F.ENTRANCE_CAVE,
+    "x": F.CAVE_EXIT,
     "u": F.RUINS,
   };
 
-  const reservedChars = new Set(["d", "v", "h", "u"]);
+  const reservedChars = new Set(["d", "v", "h", "x", "u"]);
 
   function normalizeRows(rows) {
     return rows.map((row) => row.replace(/\s+/g, ""));
@@ -106,7 +107,7 @@
 
   const CAVE_RAW = normalizeRows([
     "s s s s s s s s s s s s s s s s s s s s s s s s",
-    "s c c c c c c c c c h c c c c c c c c c c c c s",
+    "s c c c c c c c c c x c c c c c c c c c c c c s",
     "s c s s c c c c c c c c c c c c c c c c c c c s",
     "s c c c c c s c c c c c c c c c c c s s s c c s",
     "s c c c c c s c c c c c c c c c c c c c c c c s",
@@ -132,11 +133,11 @@
   const fieldVillageEntrances = findPositions(FIELD_RAW, "v");
   const fieldCaveEntrances = findPositions(FIELD_RAW, "h");
   const villageDoors = findPositions(VILLAGE_RAW, "d");
-  const caveEntrances = findPositions(CAVE_RAW, "h");
+  const caveExits = findPositions(CAVE_RAW, "x");
 
   const fieldVillageEntry = fieldVillageEntrances[0] || { x: 10, y: 8 };
   const fieldCaveEntry = fieldCaveEntrances[0] || { x: 18, y: 3 };
-  const caveEntry = caveEntrances[0] || { x: 10, y: 1 };
+  const caveExit = caveExits[0] || { x: 10, y: 1 };
 
   const defaultVillageDoor = { x: 11, y: 17 };
   // 村の扉座標を南北で抽出
@@ -232,13 +233,13 @@
       tiles: caveTiles,
       reservedTiles: caveReservedTiles,
       spawnPoints: {
-        default: { x: caveEntry.x, y: caveEntry.y + 1 },
-        fromField: { x: caveEntry.x, y: caveEntry.y + 1 },
+        default: { x: caveExit.x, y: caveExit.y + 1 },
+        fromField: { x: caveExit.x, y: caveExit.y + 1 },
       },
       entrances: [
         {
-          tile: F.ENTRANCE_CAVE,
-          position: caveEntry,
+          tile: F.CAVE_EXIT,
+          position: caveExit,
           targetScene: scenes.FIELD,
           targetSpawn: "fromCave",
         },
