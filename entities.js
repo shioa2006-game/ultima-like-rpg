@@ -5,6 +5,7 @@
   const EMOJI_MAP = {
     PLAYER: "🧝",
     MERCHANT: "🧙‍♂️",
+    INNKEEPER: "🤵",
     MOUNTAIN: "⛰️",
     ROCK: "🪨",
     TREE: "🌲",

@@ -78,6 +78,9 @@
       case Game.ui.OVERLAY.STATUS:
         handleStatusOverlayInput(keyValue, keyCode);
         break;
+      case Game.ui.OVERLAY.INN:
+        Game.inn.handleInput(keyValue, keyCode);
+        break;
       default:
         break;
     }
@@ -132,8 +135,19 @@
   }
 
   function handleTalk() {
-    if (isAdjacentToNpc(Game.state.playerPos)) {
-      Game.shop.tryOpen();
+    const pos = Game.state.playerPos;
+    if (isAdjacentToNpc(pos)) {
+      // 商人に隣接しているか確認
+      if (Game.utils.isAdjacent(pos, Game.state.merchant.pos) && Game.state.scene === Game.state.merchant.scene) {
+        Game.shop.tryOpen();
+        return;
+      }
+      // 宿屋主人に隣接しているか確認
+      if (Game.utils.isAdjacent(pos, Game.state.innkeeper.pos) && Game.state.scene === Game.state.innkeeper.scene) {
+        Game.inn.tryOpen();
+        return;
+      }
+      Game.pushMessage("近くに話しかけられる相手がいない。");
     } else {
       Game.pushMessage("近くに話しかけられる相手がいない。");
     }

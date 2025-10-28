@@ -95,6 +95,18 @@
         }
       );
     }
+    if (state.scene === state.innkeeper.scene) {
+      Game.entities.drawEmoji(
+        p,
+        Game.entities.EMOJI_MAP.INNKEEPER,
+        state.innkeeper.pos.x,
+        state.innkeeper.pos.y,
+        {
+          offsetX: -camera.x,
+          offsetY: -camera.y,
+        }
+      );
+    }
     p.pop();
   }
 
@@ -193,6 +205,8 @@
       drawInventoryOverlay(p);
     } else if (overlay === Game.ui.OVERLAY.STATUS) {
       drawStatusOverlay(p);
+    } else if (overlay === Game.ui.OVERLAY.INN) {
+      drawInnOverlay(p);
     }
   }
 
@@ -285,6 +299,29 @@
     ];
     for (let i = 0; i < lines.length; i += 1) {
       p.text(lines[i], overlayArea.x + 16, overlayArea.y + 60 + i * 24);
+    }
+  }
+
+  function drawInnOverlay(p) {
+    drawOverlayFrame(p);
+    const player = Game.state.player;
+    p.fill(255);
+    p.textAlign(p.LEFT, p.TOP);
+    p.textSize(18);
+    p.text("INN  宿屋", overlayArea.x + 16, overlayArea.y + 14);
+    p.textSize(16);
+    const lines = [
+      "",
+      "いらっしゃいませ。",
+      "一晩10Gで泊まっていきますか？",
+      "",
+      `現在のHP: ${player.hp}/${player.maxHp}`,
+      `所持金: ${player.gold}G`,
+      "",
+      "Y: 泊まる　N: やめる　ESC: 閉じる",
+    ];
+    for (let i = 0; i < lines.length; i += 1) {
+      p.text(lines[i], overlayArea.x + 16, overlayArea.y + 50 + i * 24);
     }
   }
 
