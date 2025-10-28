@@ -259,7 +259,7 @@
     items.forEach((itemId, index) => {
       const caret = index === selection ? ">" : " ";
       const meta = Game.ITEM_META[itemId];
-      const equippedMark = Game.isItemEquipped(itemId) ? " (装備中)" : "";
+      const equippedMark = Game.isItemEquipped(index) ? " (装備中)" : "";
       const name = meta ? meta.name : itemId;
       const detail = meta && meta.detail ? `(${meta.detail})` : "";
       const y = startY + index * 24;
