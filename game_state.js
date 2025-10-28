@@ -405,8 +405,8 @@
       gold: 50,
       inventory: [],
       equip: {
-        weapon: false,
-        shield: false,
+        weapon: null,
+        shield: null,
       },
     };
   }
@@ -710,8 +710,8 @@
   }
 
   function isItemEquipped(itemId) {
-    if (itemId === ITEM.BRONZE_SWORD) return !!state.player.equip.weapon;
-    if (itemId === ITEM.WOOD_SHIELD) return !!state.player.equip.shield;
+    if (itemId === ITEM.BRONZE_SWORD) return state.player.equip.weapon === itemId;
+    if (itemId === ITEM.WOOD_SHIELD) return state.player.equip.shield === itemId;
     return false;
   }
 
@@ -779,24 +779,62 @@
           consumed: true,
         };
       case ITEM.BRONZE_SWORD: {
-        state.player.equip.weapon = !state.player.equip.weapon;
-        const status = state.player.equip.weapon ? "装備した" : "外した";
-        return {
-          success: true,
-          itemId,
-          message: `Bronze Swordを${status}。`,
-          consumed: false,
-        };
+        if (state.player.equip.weapon === itemId) {
+          // 既に装備している場合は外す
+          state.player.equip.weapon = null;
+          return {
+            success: true,
+            itemId,
+            message: `Bronze Swordを外した。`,
+            consumed: false,
+          };
+        } else if (state.player.equip.weapon !== null) {
+          // 別の武器が装備されている場合
+          return {
+            success: false,
+            reason: "SLOT_OCCUPIED",
+            message: "既に武器を装備している。先に外してください。",
+            consumed: false,
+          };
+        } else {
+          // 装備する
+          state.player.equip.weapon = itemId;
+          return {
+            success: true,
+            itemId,
+            message: `Bronze Swordを装備した。`,
+            consumed: false,
+          };
+        }
       }
       case ITEM.WOOD_SHIELD: {
-        state.player.equip.shield = !state.player.equip.shield;
-        const status = state.player.equip.shield ? "装備した" : "外した";
-        return {
-          success: true,
-          itemId,
-          message: `Wood Shieldを${status}。`,
-          consumed: false,
-        };
+        if (state.player.equip.shield === itemId) {
+          // 既に装備している場合は外す
+          state.player.equip.shield = null;
+          return {
+            success: true,
+            itemId,
+            message: `Wood Shieldを外した。`,
+            consumed: false,
+          };
+        } else if (state.player.equip.shield !== null) {
+          // 別の防具が装備されている場合
+          return {
+            success: false,
+            reason: "SLOT_OCCUPIED",
+            message: "既に防具を装備している。先に外してください。",
+            consumed: false,
+          };
+        } else {
+          // 装備する
+          state.player.equip.shield = itemId;
+          return {
+            success: true,
+            itemId,
+            message: `Wood Shieldを装備した。`,
+            consumed: false,
+          };
+        }
       }
       case ITEM.ANCIENT_KEY:
         return {
@@ -816,8 +854,8 @@
   }
 
   function getPlayerEffectiveStats() {
-    const atkBonus = state.player.equip.weapon ? EQUIP_BONUS.weapon : 0;
-    const defBonus = state.player.equip.shield ? EQUIP_BONUS.shield : 0;
+    const atkBonus = state.player.equip.weapon !== null ? EQUIP_BONUS.weapon : 0;
+    const defBonus = state.player.equip.shield !== null ? EQUIP_BONUS.shield : 0;
     return {
       atk: state.player.atk + atkBonus,
       def: state.player.def + defBonus,

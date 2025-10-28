@@ -48,8 +48,6 @@
         if (screenX + tileSize < 0 || screenX > layout.mapAreaWidth) continue;
         const tileId = map.tiles[y][x];
         const color = Game.TILE_COLOR[tileId] || "#333333";
-        p.stroke(20, 20, 20);
-        p.strokeWeight(1);
         p.fill(color);
         p.rect(screenX, screenY, tileSize, tileSize);
         const overlay = Game.entities.getTileOverlay(tileId);
@@ -160,8 +158,8 @@
       `Food: ${player.food}    Gold: ${player.gold}`,
       `KEY: ${keyStatus}`,
       `ATK/DEF: ${stats.atk} / ${stats.def}`,
-      `Weapon: ${player.equip.weapon ? "Bronze Sword" : "-"}    Shield: ${
-        player.equip.shield ? "Wood Shield" : "-"
+      `Weapon: ${player.equip.weapon !== null ? "Bronze Sword" : "-"}    Shield: ${
+        player.equip.shield !== null ? "Wood Shield" : "-"
       }`,
     ];
     for (let i = 0; i < lines.length; i += 1) {
@@ -283,8 +281,8 @@
       `LV: ${player.lv}    EXP: ${player.exp}`,
       `ATK: ${stats.atk}    DEF: ${stats.def}`,
       `Food: ${player.food}    Gold: ${player.gold}`,
-      `Weapon: ${player.equip.weapon ? "Bronze Sword" : "-"}`,
-      `Shield: ${player.equip.shield ? "Wood Shield" : "-"}`,
+      `Weapon: ${player.equip.weapon !== null ? "Bronze Sword" : "-"}`,
+      `Shield: ${player.equip.shield !== null ? "Wood Shield" : "-"}`,
     ];
     for (let i = 0; i < lines.length; i += 1) {
       p.text(lines[i], overlayArea.x + 16, overlayArea.y + 60 + i * 24);
