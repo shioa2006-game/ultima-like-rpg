@@ -405,8 +405,8 @@
       gold: 50,
       inventory: [],
       equip: {
-        weapon: null,
-        shield: null,
+        weapon: null,  // インベントリのインデックス (number) または null
+        shield: null,  // インベントリのインデックス (number) または null
       },
     };
   }
@@ -650,6 +650,23 @@
 
   function removeItemByIndex(index) {
     if (index < 0 || index >= state.player.inventory.length) return null;
+
+    // 装備インデックスの調整
+    // 削除されるアイテムが装備中の場合は外す
+    if (state.player.equip.weapon === index) {
+      state.player.equip.weapon = null;
+    } else if (state.player.equip.weapon !== null && state.player.equip.weapon > index) {
+      // 削除されるインデックスより後ろの場合は-1する
+      state.player.equip.weapon -= 1;
+    }
+
+    if (state.player.equip.shield === index) {
+      state.player.equip.shield = null;
+    } else if (state.player.equip.shield !== null && state.player.equip.shield > index) {
+      // 削除されるインデックスより後ろの場合は-1する
+      state.player.equip.shield -= 1;
+    }
+
     const [removed] = state.player.inventory.splice(index, 1);
     return removed || null;
   }
@@ -709,9 +726,10 @@
     return Math.floor(price / 2);
   }
 
-  function isItemEquipped(itemId) {
-    if (itemId === ITEM.BRONZE_SWORD) return state.player.equip.weapon === itemId;
-    if (itemId === ITEM.WOOD_SHIELD) return state.player.equip.shield === itemId;
+  function isItemEquipped(index) {
+    // インベントリのインデックスが装備されているかチェック
+    if (state.player.equip.weapon === index) return true;
+    if (state.player.equip.shield === index) return true;
     return false;
   }
 
@@ -724,7 +742,7 @@
       };
     }
     const itemId = state.player.inventory[index];
-    if (isItemEquipped(itemId)) {
+    if (isItemEquipped(index)) {
       return {
         success: false,
         reason: "EQUIPPED",
@@ -779,7 +797,7 @@
           consumed: true,
         };
       case ITEM.BRONZE_SWORD: {
-        if (state.player.equip.weapon === itemId) {
+        if (state.player.equip.weapon === index) {
           // 既に装備している場合は外す
           state.player.equip.weapon = null;
           return {
@@ -798,7 +816,7 @@
           };
         } else {
           // 装備する
-          state.player.equip.weapon = itemId;
+          state.player.equip.weapon = index;
           return {
             success: true,
             itemId,
@@ -808,7 +826,7 @@
         }
       }
       case ITEM.WOOD_SHIELD: {
-        if (state.player.equip.shield === itemId) {
+        if (state.player.equip.shield === index) {
           // 既に装備している場合は外す
           state.player.equip.shield = null;
           return {
@@ -827,7 +845,7 @@
           };
         } else {
           // 装備する
-          state.player.equip.shield = itemId;
+          state.player.equip.shield = index;
           return {
             success: true,
             itemId,
@@ -854,8 +872,27 @@
   }
 
   function getPlayerEffectiveStats() {
-    const atkBonus = state.player.equip.weapon !== null ? EQUIP_BONUS.weapon : 0;
-    const defBonus = state.player.equip.shield !== null ? EQUIP_BONUS.shield : 0;
+    let atkBonus = 0;
+    let defBonus = 0;
+
+    // 武器のボーナス
+    if (state.player.equip.weapon !== null) {
+      const weaponIndex = state.player.equip.weapon;
+      const weaponId = state.player.inventory[weaponIndex];
+      if (weaponId === ITEM.BRONZE_SWORD) {
+        atkBonus = EQUIP_BONUS.weapon;
+      }
+    }
+
+    // 防具のボーナス
+    if (state.player.equip.shield !== null) {
+      const shieldIndex = state.player.equip.shield;
+      const shieldId = state.player.inventory[shieldIndex];
+      if (shieldId === ITEM.WOOD_SHIELD) {
+        defBonus = EQUIP_BONUS.shield;
+      }
+    }
+
     return {
       atk: state.player.atk + atkBonus,
       def: state.player.def + defBonus,

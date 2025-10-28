@@ -153,14 +153,26 @@
     p.textAlign(p.LEFT, p.TOP);
     p.textSize(16);
     const keyStatus = Game.flags && Game.flags.hasKey ? "Yes" : "No";
+    // 装備名を取得
+    let weaponName = "-";
+    if (player.equip.weapon !== null) {
+      const weaponId = player.inventory[player.equip.weapon];
+      const meta = Game.ITEM_META[weaponId];
+      weaponName = meta ? meta.name : weaponId;
+    }
+    let shieldName = "-";
+    if (player.equip.shield !== null) {
+      const shieldId = player.inventory[player.equip.shield];
+      const meta = Game.ITEM_META[shieldId];
+      shieldName = meta ? meta.name : shieldId;
+    }
+
     const lines = [
       `HP: ${player.hp}/${player.maxHp}    LV: ${player.lv}    EXP: ${player.exp}`,
       `Food: ${player.food}    Gold: ${player.gold}`,
       `KEY: ${keyStatus}`,
       `ATK/DEF: ${stats.atk} / ${stats.def}`,
-      `Weapon: ${player.equip.weapon !== null ? "Bronze Sword" : "-"}    Shield: ${
-        player.equip.shield !== null ? "Wood Shield" : "-"
-      }`,
+      `Weapon: ${weaponName}    Shield: ${shieldName}`,
     ];
     for (let i = 0; i < lines.length; i += 1) {
       p.text(lines[i], x + 12, y + 12 + i * 24);
@@ -259,7 +271,7 @@
     items.forEach((itemId, index) => {
       const caret = index === selection ? ">" : " ";
       const meta = Game.ITEM_META[itemId];
-      const equippedMark = Game.isItemEquipped(itemId) ? " (装備中)" : "";
+      const equippedMark = Game.isItemEquipped(index) ? " (装備中)" : "";
       const name = meta ? meta.name : itemId;
       const detail = meta && meta.detail ? `(${meta.detail})` : "";
       const y = startY + index * 24;
@@ -276,13 +288,28 @@
     p.textSize(18);
     p.text("STATUS  ESC/S:閉じる", overlayArea.x + 16, overlayArea.y + 14);
     p.textSize(16);
+
+    // 装備名を取得
+    let weaponName = "-";
+    if (player.equip.weapon !== null) {
+      const weaponId = player.inventory[player.equip.weapon];
+      const meta = Game.ITEM_META[weaponId];
+      weaponName = meta ? meta.name : weaponId;
+    }
+    let shieldName = "-";
+    if (player.equip.shield !== null) {
+      const shieldId = player.inventory[player.equip.shield];
+      const meta = Game.ITEM_META[shieldId];
+      shieldName = meta ? meta.name : shieldId;
+    }
+
     const lines = [
       `HP: ${player.hp}/${player.maxHp}`,
       `LV: ${player.lv}    EXP: ${player.exp}`,
       `ATK: ${stats.atk}    DEF: ${stats.def}`,
       `Food: ${player.food}    Gold: ${player.gold}`,
-      `Weapon: ${player.equip.weapon !== null ? "Bronze Sword" : "-"}`,
-      `Shield: ${player.equip.shield !== null ? "Wood Shield" : "-"}`,
+      `Weapon: ${weaponName}`,
+      `Shield: ${shieldName}`,
     ];
     for (let i = 0; i < lines.length; i += 1) {
       p.text(lines[i], overlayArea.x + 16, overlayArea.y + 60 + i * 24);
