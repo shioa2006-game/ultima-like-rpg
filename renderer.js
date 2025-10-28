@@ -154,10 +154,9 @@
     p.textSize(16);
     const keyStatus = Game.flags && Game.flags.hasKey ? "Yes" : "No";
     const lines = [
-      `HP: ${player.hp}/${player.maxHp}    LV: ${player.lv}    EXP: ${player.exp}`,
+      `HP: ${player.hp}/${player.maxHp}    LV: ${player.lv}    EXP: ${player.exp}    ATK/DEF: ${stats.atk} / ${stats.def}`,
       `Food: ${player.food}    Gold: ${player.gold}`,
       `KEY: ${keyStatus}`,
-      `ATK/DEF: ${stats.atk} / ${stats.def}`,
       `Weapon: ${player.equip.weapon !== null ? "Bronze Sword" : "-"}    Shield: ${
         player.equip.shield !== null ? "Wood Shield" : "-"
       }`,
