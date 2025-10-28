@@ -130,6 +130,3 @@ Version: 0.2 / Target: Browser / Engine: p5.js / Canvas: 800x600 / Grid: 24x18 (
 - `Game.occupancy` がタイル占有状態を構築し、NPC・敵・宝箱などの衝突を防ぐ。
 - 敵生成は `Game.entities.ensureFieldEnemies` / `ensureCaveEnemies` が担当。
 - メッセージは `Game.pushMessage` 経由で投入し、常に最新 3 件に丸め込む。
-
-## 14. 今後の拡張候補
-- Magic/MP、複数村、クエスト、音源などは未実装。`Gap.md` に差分と課題を記録。
