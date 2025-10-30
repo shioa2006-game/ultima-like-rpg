@@ -10,7 +10,7 @@ function setup() {
 
 function draw() {
   background(0);
-  Game.occupancy.rebuild();
+  Game.occupancy.ensure();
   Game.renderer.drawMap();
   Game.renderer.drawEntities();
   Game.renderer.drawUI();
@@ -28,3 +28,4 @@ function keyPressed() {
   }
   Game.input.handleKeyPressed(key, keyCode);
 }
+
