@@ -19,7 +19,7 @@
        Game.pushMessage("もう一歩近づこう。");
        return false;
      }
-     Game.pushMessage("商人と取引を始めた。");
+     Game.pushMessage("商人: いらっしゃいませ。何をお探しですか？");
      Game.ui.open(Game.ui.OVERLAY.SHOP);
      return true;
    }
