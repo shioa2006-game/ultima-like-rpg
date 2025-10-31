@@ -14,7 +14,7 @@
        Game.pushMessage("もう一歩近づこう。");
        return false;
      }
-     Game.pushMessage("宿屋の主人が話しかけてきた。");
+     Game.pushMessage("宿屋の主人: いらっしゃいませ。一晩 10G で泊まっていきますか？");
      Game.ui.open(Game.ui.OVERLAY.INN);
      return true;
    }

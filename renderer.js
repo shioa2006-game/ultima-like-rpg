@@ -229,8 +229,6 @@
        overlayArea.y + 44
      );
      let contentY = overlayArea.y + 68;
-     p.text("いらっしゃいませ。", overlayArea.x + 16, contentY);
-     contentY += 48;
      if (!list.length) {
        const emptyText = isSellMode ? "売れるものがありません。" : "ただいま準備中です。";
        p.text(emptyText, overlayArea.x + 16, contentY);
@@ -252,7 +250,7 @@
        });
      }
      p.text(
-       "B:買う / S:売る / Enter:決定 / ESC:閉じる",
+       "↑↓:選択 / Enter:決定 / B:買う / S:売る / ESC:閉じる",
        overlayArea.x + 16,
        overlayArea.y + overlayArea.height - 40
      );
@@ -318,8 +316,8 @@
      p.textSize(16);
      const lines = [
        "",
-       "いらっしゃいませ。",
-       "一晩 10G で泊まっていきますか？",
+       "宿泊料金: 10G",
+       "効果: HP全回復",
        "",
        "Y:泊まる  N:やめる  ESC:閉じる",
      ];
