@@ -121,7 +121,7 @@
    ]);
 
    const NO_ENEMY_RADIUS = 1;
-   const MAX_MESSAGES = 3;
+   const MAX_MESSAGES = 7;
 
    const ENEMY_DATA = Object.freeze({
      SLIME: {
