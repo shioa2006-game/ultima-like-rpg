@@ -3,14 +3,14 @@
    const Game = (window.Game = window.Game || {});
 
    const tileSize = Game.config.tileSize;
-   const mapAreaHeight = 360;
+   const mapAreaHeight = 420;
 
    const layout = {
      mapAreaWidth: Game.config.canvasWidth,
      mapAreaHeight,
      mapOffsetX: 0,
      mapOffsetY: 0,
-     panelHeight: 120,
+     panelHeight: 180,
      panelWidth: Game.config.canvasWidth / 2,
    };
 
@@ -135,11 +135,10 @@
    function drawPanels(p = window) {
      drawMessagePanel(p);
      drawStatusPanel(p);
-     drawCommandPanel(p);
    }
 
    function drawMessagePanel(p) {
-     const x = 0;
+     const x = layout.panelWidth;
      const y = layout.mapAreaHeight;
      p.fill(15, 15, 15);
      p.stroke(80);
@@ -147,14 +146,14 @@
      p.fill(240);
      p.textAlign(p.LEFT, p.TOP);
      p.textSize(16);
-     const messages = Game.state.messages.slice(-3);
+     const messages = Game.state.messages.slice(-7);
      messages.forEach((line, index) => {
        p.text(line, x + 12, y + 12 + index * 24);
      });
    }
 
    function drawStatusPanel(p) {
-     const x = layout.panelWidth;
+     const x = 0;
      const y = layout.mapAreaHeight;
      const player = Game.state.player;
      const stats = Game.getPlayerEffectiveStats();
@@ -178,23 +177,6 @@
      });
    }
 
-   function drawCommandPanel(p) {
-     const y = layout.mapAreaHeight + layout.panelHeight;
-     const height = layout.panelHeight;
-     p.fill(10, 10, 10);
-     p.stroke(80);
-     p.rect(0, y, Game.config.canvasWidth, height);
-     p.fill(220);
-     p.textAlign(p.LEFT, p.TOP);
-     p.textSize(16);
-    const lines = [
-      "矢印キー:移動  T:会話  I:所持品  U:使用  S:ステータス",
-      "A/D/R:戦闘コマンド  B/S:ショップ  ESC:閉じる",
-    ];
-     lines.forEach((line, index) => {
-       p.text(line, 12, y + 12 + index * 24);
-     });
-   }
 
    function drawOverlays(p = window) {
      const overlay = Game.ui.state.overlay;
