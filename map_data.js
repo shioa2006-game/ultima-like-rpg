@@ -14,7 +14,6 @@
      t: F.TREE,
      w: F.WALL,
      d: F.DOOR,
-     i: F.FLOOR_IN,
      c: F.FLOOR_CAVE,
      f: F.FLOOR_SHOP,
      v: F.ENTRANCE_VIL,
