@@ -4,6 +4,9 @@ function preload() {
   if (!window.Game) window.Game = {};
   if (!window.Game.assets) window.Game.assets = {};
   window.Game.assets.tilesSheet = loadImage('assets/tiles.png');
+  window.Game.assets.actorsSheet = loadImage('assets/actors.png');
+  window.Game.assets.enemiesSheet = loadImage('assets/enemies.png');
+  window.Game.assets.objectsSheet = loadImage('assets/objects_interactable.png');
 }
 
 function setup() {
@@ -35,4 +38,3 @@ function keyPressed() {
   }
   Game.input.handleKeyPressed(key, keyCode);
 }
-

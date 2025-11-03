@@ -1,4 +1,4 @@
- (function () {
+﻿ (function () {
    // ゲーム全体の定数と状態を管理
    const Game = (window.Game = window.Game || {});
 
@@ -125,61 +125,61 @@
    const MAX_MESSAGES = 4;
 
    const ENEMY_DATA = Object.freeze({
-     SLIME: {
-       emoji: "🫠",
-       hp: [8, 12],
-       atk: [2, 3],
-       def: [0, 0],
-       exp: [3, 5],
-       gold: [4, 8],
-     },
-     BAT: {
-       emoji: "🦇",
-       hp: [14, 18],
-       atk: [3, 4],
-       def: [0, 1],
-       exp: [6, 8],
-       gold: [8, 12],
-     },
-     SPIDER: {
-       emoji: "🕷",
-       hp: [20, 26],
-       atk: [4, 6],
-       def: [1, 2],
-       exp: [9, 12],
-       gold: [12, 16],
-     },
-     GHOST: {
-       emoji: "👻",
-       hp: [28, 34],
-       atk: [6, 7],
-       def: [2, 3],
-       exp: [12, 16],
-       gold: [16, 20],
-     },
-     VAMPIRE: {
-       emoji: "🧛‍♂️",
-       hp: [36, 44],
-       atk: [7, 9],
-       def: [3, 4],
-       exp: [18, 24],
-       gold: [22, 28],
-     },
-     TROLL: {
-       emoji: "🧌",
-       hp: [48, 58],
-       atk: [9, 11],
-       def: [4, 5],
-       exp: [24, 32],
-       gold: [28, 36],
-     },
-     DRAGON: {
-       emoji: "🐉",
-       hp: [60, 80],
-       atk: [9, 11],
-       def: [4, 5],
-       exp: [30, 40],
-       gold: [35, 50],
+    SLIME: {
+      name: "スライム",
+      hp: [8, 12],
+      atk: [2, 3],
+      def: [0, 0],
+      exp: [3, 5],
+      gold: [4, 8],
+    },
+    BAT: {
+      name: "コウモリ",
+      hp: [14, 18],
+      atk: [3, 4],
+      def: [0, 1],
+      exp: [6, 8],
+      gold: [8, 12],
+    },
+    SPIDER: {
+      name: "クモ",
+      hp: [20, 26],
+      atk: [4, 6],
+      def: [1, 2],
+      exp: [9, 12],
+      gold: [12, 16],
+    },
+    GHOST: {
+      name: "ゴースト",
+      hp: [28, 34],
+      atk: [6, 7],
+      def: [2, 3],
+      exp: [12, 16],
+      gold: [16, 20],
+    },
+    VAMPIRE: {
+      name: "ヴァンパイア",
+      hp: [36, 44],
+      atk: [7, 9],
+      def: [3, 4],
+      exp: [18, 24],
+      gold: [22, 28],
+    },
+    TROLL: {
+      name: "トロル",
+      hp: [48, 58],
+      atk: [9, 11],
+      def: [4, 5],
+      exp: [24, 32],
+      gold: [28, 36],
+    },
+    DRAGON: {
+      name: "ドラゴン",
+      hp: [60, 80],
+      atk: [9, 11],
+      def: [4, 5],
+      exp: [30, 40],
+      gold: [35, 50],
      },
    });
 
@@ -425,14 +425,33 @@
      occupancyDirty = true;
    }
 
-   function pushMessage(text) {
-     state.messages.push(text);
-     if (state.messages.length > MAX_MESSAGES) {
-       state.messages.shift();
-     }
-   }
-
-   function setPlayerPosition(pos) {
+  function pushMessage(message, meta = {}) {
+    let textValue;
+    let iconValue;
+    if (typeof message === "string") {
+      textValue = message;
+      iconValue = meta.icon || null;
+    } else if (message && typeof message === "object") {
+      textValue = message.text || "";
+      iconValue = message.icon || meta.icon || null;
+    } else {
+      textValue = message != null ? String(message) : "";
+      iconValue = meta.icon || null;
+    }
+    const icon =
+      iconValue && typeof iconValue === "object"
+        ? {
+            type: iconValue.type || null,
+            kind: iconValue.kind || null,
+            label: iconValue.label || null,
+          }
+        : null;
+    state.messages.push({ text: textValue, icon });
+    if (state.messages.length > MAX_MESSAGES) {
+      state.messages.shift();
+    }
+  }
+  function setPlayerPosition(pos) {
      state.playerPos = { x: pos.x, y: pos.y };
      markOccupancyDirty();
    }
@@ -1017,3 +1036,4 @@
      resolveTileEvent,
    };
  })();
+

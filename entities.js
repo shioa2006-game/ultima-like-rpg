@@ -1,365 +1,460 @@
- (function () {
-   // 絵文字による簡易描画と敵の出現制御を担当
-   const Game = (window.Game = window.Game || {});
+(function () {
+  // キャラクターと敵・イベント管理
+  const Game = (window.Game = window.Game || {});
 
-   const EMOJI_MAP = {
-     PLAYER: "🧝",
-     MERCHANT: "🧙‍♂️",
-     INNKEEPER: "🤵",
-     MOUNTAIN: "⛰️",
-     ROCK: "🪨",
-     TREE: "🌲",
-     VILLAGE: "🏘️",
-     CAVE: "🕳️",
-     STAIRS_UP: "🪜",
-     STAIRS_DOWN: "🪜",
-     DOOR: "🚪",
-     WALL: "🧱",
-     RUINS: "🏛️",
-     CHEST: "📦",
-   };
+  const ACTOR_KIND = Object.freeze({
+    PLAYER: "PLAYER",
+    MERCHANT: "MERCHANT",
+    INNKEEPER: "INNKEEPER",
+  });
 
-   const tileOverlay = {
-     [Game.TILE.MOUNTAIN]: EMOJI_MAP.MOUNTAIN,
-     [Game.TILE.ROCK]: EMOJI_MAP.ROCK,
-     [Game.TILE.TREE]: EMOJI_MAP.TREE,
-     [Game.TILE.ENTRANCE_VIL]: EMOJI_MAP.VILLAGE,
-     [Game.TILE.ENTRANCE_CAVE]: EMOJI_MAP.CAVE,
-     [Game.TILE.STAIRS_UP]: EMOJI_MAP.STAIRS_UP,
-     [Game.TILE.STAIRS_DOWN]: EMOJI_MAP.STAIRS_DOWN,
-     [Game.TILE.DOOR]: EMOJI_MAP.DOOR,
-     [Game.TILE.WALL]: EMOJI_MAP.WALL,
-     [Game.TILE.RUINS]: EMOJI_MAP.RUINS,
-   };
+  const ACTOR_SPRITE = Object.freeze({
+    [ACTOR_KIND.PLAYER]: 0,
+    [ACTOR_KIND.MERCHANT]: 1,
+    [ACTOR_KIND.INNKEEPER]: 2,
+  });
 
-   const MIN_FIELD_ENEMIES = 3;
-   const MAX_FIELD_ENEMIES = 5;
-   const MIN_CAVE_ENEMIES = 2;
-   const MAX_CAVE_ENEMIES = 4;
-   const RESPAWN_STEP_THRESHOLD = 20;
-   const SAFE_DISTANCE_FROM_PLAYER = 4;
+  const ACTOR_SPRITE_SIZE = 48;
 
-   let dragonSpawnSpot = null;
+  const ENEMY_KIND = Object.freeze({
+    SLIME: "SLIME",
+    BAT: "BAT",
+    SPIDER: "SPIDER",
+    GHOST: "GHOST",
+    VAMPIRE: "VAMPIRE",
+    TROLL: "TROLL",
+    DRAGON: "DRAGON",
+  });
 
-   function drawEmoji(g, emoji, gridX, gridY, options = {}) {
-     const size = Game.config.tileSize;
-     const offsetX = options.offsetX || 0;
-     const offsetY = options.offsetY || 0;
-     const cx = gridX * size + size / 2 + offsetX;
-     const cy = gridY * size + size / 2 + offsetY;
-     g.textAlign(g.CENTER, g.CENTER);
-     g.textSize(size * 0.8);
-     g.text(emoji, cx, cy + size * 0.05);
-   }
+  const ENEMY_SPRITE = Object.freeze({
+    [ENEMY_KIND.SLIME]: 0,
+    [ENEMY_KIND.BAT]: 1,
+    [ENEMY_KIND.SPIDER]: 2,
+    [ENEMY_KIND.GHOST]: 3,
+    [ENEMY_KIND.VAMPIRE]: 4,
+    [ENEMY_KIND.TROLL]: 5,
+    [ENEMY_KIND.DRAGON]: 6,
+  });
 
-   function getTileOverlay(tileId) {
-     return tileOverlay[tileId] || null;
-   }
+  const ENEMY_SPRITE_SIZE = 48;
 
-   function spawnInitialEnemies() {
-     if (dragonSpawnSpot == null) {
-       dragonSpawnSpot = findDragonSpot();
-     }
-     if (Game.state.scene === Game.SCENE.FIELD) {
-       ensureFieldEnemies();
-     }
-     if (Game.state.scene === Game.SCENE.CAVE) {
-       ensureCaveEnemies();
-     }
-   }
+  const OBJECT_KIND = Object.freeze({
+    CHEST: "CHEST",
+  });
 
-   function ensureFieldEnemies() {
-     const state = Game.state;
-     if (!Game.mapData || !Game.mapData[Game.SCENE.FIELD]) return;
+  const OBJECT_SPRITE = Object.freeze({
+    [OBJECT_KIND.CHEST]: 0,
+  });
 
-     if (!state.flags.dragonDefeated && !state.enemies.some((enemy) => enemy.kind === "DRAGON")) {
-       spawnDragon();
-     }
+  const OBJECT_SPRITE_SIZE = 48;
 
-     if (state.scene !== Game.SCENE.FIELD) return;
+  const MIN_FIELD_ENEMIES = 3;
+  const MAX_FIELD_ENEMIES = 5;
+  const MIN_CAVE_ENEMIES = 2;
+  const MAX_CAVE_ENEMIES = 4;
+  const RESPAWN_STEP_THRESHOLD = 20;
+  const SAFE_DISTANCE_FROM_PLAYER = 4;
+  const ENEMY_CHASE_DISTANCE = 7;
 
-     Game.occupancy.markDirty();
-     Game.occupancy.ensure();
+  let dragonSpawnSpot = null;
 
-     let guard = 0;
-     while (countFieldNonDragon() < MIN_FIELD_ENEMIES && guard < 20) {
-       if (!spawnFieldEnemy()) break;
-       guard += 1;
-     }
+  function drawActor(g, actorType, gridX, gridY, options = {}) {
+    // アクターをスプライトで描画
+    if (!Game.assets || !Game.assets.actorsSheet) return false;
+    const spriteIndex = ACTOR_SPRITE[actorType];
+    if (spriteIndex == null) return false;
+    const tileSize = Game.config.tileSize;
+    const offsetX = options.offsetX || 0;
+    const offsetY = options.offsetY || 0;
+    const screenX = gridX * tileSize + offsetX;
+    const screenY = gridY * tileSize + offsetY;
+    const sx = spriteIndex * ACTOR_SPRITE_SIZE;
+    g.push();
+    g.imageMode(g.CORNER);
+    g.image(
+      Game.assets.actorsSheet,
+      screenX,
+      screenY,
+      tileSize,
+      tileSize,
+      sx,
+      0,
+      ACTOR_SPRITE_SIZE,
+      ACTOR_SPRITE_SIZE
+    );
+    g.pop();
+    return true;
+  }
 
-     guard = 0;
-     while (countFieldNonDragon() < MAX_FIELD_ENEMIES && guard < 40) {
-       if (!spawnFieldEnemy()) break;
-       guard += 1;
-     }
-   }
+  function drawEnemy(g, enemyKind, gridX, gridY, options = {}) {
+    // 敵キャラクターをスプライトで描画
+    if (!Game.assets || !Game.assets.enemiesSheet) return false;
+    const spriteIndex = ENEMY_SPRITE[enemyKind];
+    if (spriteIndex == null) return false;
+    const tileSize = Game.config.tileSize;
+    const drawSize = options.drawSize || tileSize;
+    const offsetX = options.offsetX || 0;
+    const offsetY = options.offsetY || 0;
+    const useScreen = options.useScreenCoordinates === true;
+    const baseX = useScreen ? gridX : gridX * tileSize;
+    const baseY = useScreen ? gridY : gridY * tileSize;
+    const screenX = baseX + offsetX;
+    const screenY = baseY + offsetY;
+    const sx = spriteIndex * ENEMY_SPRITE_SIZE;
+    g.push();
+    g.imageMode(g.CORNER);
+    g.image(
+      Game.assets.enemiesSheet,
+      screenX,
+      screenY,
+      drawSize,
+      drawSize,
+      sx,
+      0,
+      ENEMY_SPRITE_SIZE,
+      ENEMY_SPRITE_SIZE
+    );
+    g.pop();
+    return true;
+  }
 
-   function ensureCaveEnemies() {
-     const state = Game.state;
-     if (!Game.mapData || !Game.mapData[Game.SCENE.CAVE]) return;
-     if (state.scene !== Game.SCENE.CAVE) return;
+  function drawObject(g, objectKind, gridX, gridY, options = {}) {
+    // インタラクト可能なオブジェクトをスプライトで描画
+    if (!Game.assets || !Game.assets.objectsSheet) return false;
+    const spriteIndex = OBJECT_SPRITE[objectKind];
+    if (spriteIndex == null) return false;
+    const tileSize = Game.config.tileSize;
+    const drawSize = options.drawSize || tileSize;
+    const offsetX = options.offsetX || 0;
+    const offsetY = options.offsetY || 0;
+    const useScreen = options.useScreenCoordinates === true;
+    const baseX = useScreen ? gridX : gridX * tileSize;
+    const baseY = useScreen ? gridY : gridY * tileSize;
+    const screenX = baseX + offsetX;
+    const screenY = baseY + offsetY;
+    const sx = spriteIndex * OBJECT_SPRITE_SIZE;
+    g.push();
+    g.imageMode(g.CORNER);
+    g.image(
+      Game.assets.objectsSheet,
+      screenX,
+      screenY,
+      drawSize,
+      drawSize,
+      sx,
+      0,
+      OBJECT_SPRITE_SIZE,
+      OBJECT_SPRITE_SIZE
+    );
+    g.pop();
+    return true;
+  }
 
-     Game.occupancy.markDirty();
-     Game.occupancy.ensure();
-
-     let guard = 0;
-     while (countEnemiesForScene(Game.SCENE.CAVE) < MIN_CAVE_ENEMIES && guard < 20) {
-       if (!spawnCaveEnemy()) break;
-       guard += 1;
-     }
-
-     guard = 0;
-     while (countEnemiesForScene(Game.SCENE.CAVE) < MAX_CAVE_ENEMIES && guard < 40) {
-       if (!spawnCaveEnemy()) break;
-       guard += 1;
-     }
-   }
-
-   function countFieldNonDragon() {
-     return Game.state.enemies.filter(
-       (enemy) => enemy.scene === Game.SCENE.FIELD && enemy.kind !== "DRAGON"
-     ).length;
-   }
-
-   function countEnemiesForScene(scene) {
-     return Game.state.enemies.filter((enemy) => enemy.scene === scene).length;
-   }
-
-   function spawnFieldEnemy() {
-     return spawnEnemyForScene(Game.SCENE.FIELD);
-   }
-
-   function spawnCaveEnemy() {
-     return spawnEnemyForScene(Game.SCENE.CAVE);
-   }
-
-   function spawnEnemyForScene(scene) {
-     const map = Game.mapData[scene];
-     if (!map) return false;
-     const position = findSpawnPositionForScene(map, scene);
-     if (!position) return false;
-     const kind = pickEnemyKind(position, map, scene);
-     if (!kind) return false;
-     const enemy = createEnemyInstance(kind, position, scene);
-     Game.state.enemies.push(enemy);
-     Game.occupancy.markDirty();
-     return true;
-   }
-
-   function spawnDragon() {
-     if (!dragonSpawnSpot) {
-       dragonSpawnSpot = findDragonSpot();
-     }
-     if (!dragonSpawnSpot) return;
-     if (isOccupiedByEntity(dragonSpawnSpot.x, dragonSpawnSpot.y, Game.SCENE.FIELD)) return;
-     const enemy = createEnemyInstance("DRAGON", dragonSpawnSpot, Game.SCENE.FIELD);
-     Game.state.enemies.push(enemy);
-     Game.occupancy.markDirty();
-   }
-
-   function findDragonSpot() {
-     const map = Game.mapData ? Game.mapData[Game.SCENE.FIELD] : null;
-     if (!map) return { x: 5, y: 6 };
-     for (let y = 0; y < Game.config.gridHeight; y += 1) {
-       for (let x = 0; x < Game.config.gridWidth; x += 1) {
-         if (map.tiles[y][x] === Game.TILE.RUINS) {
-           const candidate = { x, y: Math.min(y + 1, Game.config.gridHeight - 1) };
-           if (!Game.TILE_BLOCKED[map.tiles[candidate.y][candidate.x]]) {
-             return candidate;
-           }
-         }
-       }
-     }
-     return { x: 5, y: 6 };
-   }
-
-   function findSpawnPositionForScene(map, scene) {
-     const attempts = 200;
-     for (let i = 0; i < attempts; i += 1) {
-       const x = Game.utils.randInt(1, Game.config.gridWidth - 2);
-       const y = Game.utils.randInt(1, Game.config.gridHeight - 2);
-       if (!Game.occupancy.isFreeForEnemy(x, y, scene)) continue;
-       if (
-         scene === Game.state.scene &&
-         Game.utils.distance(Game.state.playerPos, { x, y }) < SAFE_DISTANCE_FROM_PLAYER
-       ) {
-         continue;
-       }
-       return { x, y };
-     }
-     return null;
-   }
-
-   function pickEnemyKind(position, map, scene) {
-     const tile = map.tiles[position.y][position.x];
-
-     if (scene === Game.SCENE.FIELD) {
-       if (tile === Game.TILE.TREE || isNearTile(position, Game.TILE.TREE, 1, scene)) {
-         return Game.utils.choice(["BAT", "SPIDER"]);
-       }
-       if (
-         tile === Game.TILE.MOUNTAIN ||
-         tile === Game.TILE.ROCK ||
-         isNearTile(position, Game.TILE.MOUNTAIN, 1, scene) ||
-         isNearTile(position, Game.TILE.ROCK, 1, scene)
-       ) {
-         return "SPIDER";
-       }
-       return Game.utils.choice(["SLIME", "BAT"]);
-     }
-
-     if (scene === Game.SCENE.CAVE) {
-       return Game.utils.choice(["GHOST", "VAMPIRE", "TROLL"]);
-     }
-
-     return null;
-   }
-
-   function isNearTile(position, tileId, radius, scene) {
-     const map = Game.mapData ? Game.mapData[scene] : null;
-     if (!map) return false;
-     for (let dy = -radius; dy <= radius; dy += 1) {
-       for (let dx = -radius; dx <= radius; dx += 1) {
-         const nx = position.x + dx;
-         const ny = position.y + dy;
-         if (nx < 0 || ny < 0 || nx >= Game.config.gridWidth || ny >= Game.config.gridHeight) continue;
-         if (map.tiles[ny][nx] === tileId) return true;
-       }
-     }
-     return false;
-   }
-
-   function createEnemyInstance(kind, position, scene) {
-     const data = Game.ENEMY_DATA[kind];
-     const enemy = {
-       id: Game.nextEnemyInstanceId(),
-       kind,
-       emoji: data.emoji,
-       scene,
-       pos: { x: position.x, y: position.y },
-       hp: Game.utils.randInt(data.hp[0], data.hp[1]),
-       maxHp: 0,
-       atk: Game.utils.randInt(data.atk[0], data.atk[1]),
-       def: Game.utils.randInt(data.def[0], data.def[1]),
-       exp: Game.utils.randInt(data.exp[0], data.exp[1]),
-       gold: Game.utils.randInt(data.gold[0], data.gold[1]),
-     };
-     enemy.maxHp = enemy.hp;
-     return enemy;
-   }
-
-   function isOccupiedByEntity(x, y, scene) {
-     const targetScene = scene || Game.state.scene;
-     const player = Game.state.playerPos;
-     if (targetScene === Game.state.scene && player.x === x && player.y === y) return true;
-    if (Game.state.merchant.scene === targetScene) {
-      if (Game.state.merchant.pos.x === x && Game.state.merchant.pos.y === y) return true;
+  function spawnInitialEnemies() {
+    if (dragonSpawnSpot == null) {
+      dragonSpawnSpot = findDragonSpot();
     }
-    if (Game.state.innkeeper.scene === targetScene) {
-      if (Game.state.innkeeper.pos.x === x && Game.state.innkeeper.pos.y === y) return true;
+    ensureFieldEnemies();
+    ensureCaveEnemies();
+  }
+
+  function ensureFieldEnemies() {
+    const state = Game.state;
+    if (!Game.mapData || !Game.mapData[Game.SCENE.FIELD]) return;
+
+    spawnDragon();
+
+    if (state.scene !== Game.SCENE.FIELD) return;
+
+    Game.occupancy.markDirty();
+    Game.occupancy.ensure();
+
+    let guard = 0;
+    while (countFieldNonDragon() < MIN_FIELD_ENEMIES && guard < 20) {
+      if (!spawnFieldEnemy()) break;
+      guard += 1;
     }
-     return Game.state.enemies.some(
-       (enemy) => enemy.scene === targetScene && enemy.pos.x === x && enemy.pos.y === y
-     );
-   }
 
-   function moveEnemiesTowardPlayer() {
-     const scene = Game.state.scene;
-     if (scene !== Game.SCENE.FIELD && scene !== Game.SCENE.CAVE) return;
-     const playerPos = Game.state.playerPos;
-     const enemies = Game.state.enemies.filter(
-       (enemy) => enemy.scene === scene && enemy.kind !== "DRAGON"
-     );
-     if (!enemies.length) return;
+    guard = 0;
+    while (countFieldNonDragon() < MAX_FIELD_ENEMIES && guard < 40) {
+      if (!spawnFieldEnemy()) break;
+      guard += 1;
+    }
+  }
 
-     Game.occupancy.ensure();
+  function ensureCaveEnemies() {
+    if (!Game.mapData || !Game.mapData[Game.SCENE.CAVE]) return;
+    if (Game.state.scene !== Game.SCENE.CAVE) return;
 
-     const reserved = new Set();
-     const reserveKey = (pos) => `${pos.x},${pos.y}`;
+    Game.occupancy.markDirty();
+    Game.occupancy.ensure();
 
-     for (let i = 0; i < enemies.length; i += 1) {
-       if (Game.combat.isActive()) break;
-       const enemy = enemies[i];
-       const dist = Game.utils.distance(enemy.pos, playerPos);
-       if (dist >= 7) continue;
-       const path = Game.utils.findPath(enemy.pos, playerPos, {
-         scene,
-         allowGoalOccupied: true,
-         canEnter(x, y) {
-           if (x === enemy.pos.x && y === enemy.pos.y) return true;
-           const key = `${x},${y}`;
-           if (reserved.has(key)) return false;
-           return Game.occupancy.isFreeForEnemy(x, y, scene);
-         },
-       });
-       if (!path || path.length < 2) continue;
-       const nextStep = path[1];
-       if (nextStep.x === enemy.pos.x && nextStep.y === enemy.pos.y) continue;
-       enemy.pos.x = nextStep.x;
-       enemy.pos.y = nextStep.y;
-       reserved.add(reserveKey(enemy.pos));
-       if (enemy.pos.x === playerPos.x && enemy.pos.y === playerPos.y) {
-         Game.combat.startBattle(enemy);
-         break;
-       }
-     }
-   }
+    let guard = 0;
+    while (countEnemiesForScene(Game.SCENE.CAVE) < MIN_CAVE_ENEMIES && guard < 20) {
+      if (!spawnCaveEnemy()) break;
+      guard += 1;
+    }
 
-   function onPlayerStep() {
-     if (Game.battle.active) return;
-     if (Game.state.scene !== Game.SCENE.FIELD && Game.state.scene !== Game.SCENE.CAVE) {
-       Game.state.enemyRespawnSteps = 0;
-       return;
-     }
-     Game.state.enemyRespawnSteps += 1;
-     if (Game.state.enemyRespawnSteps >= RESPAWN_STEP_THRESHOLD) {
-       if (
-         Game.state.scene === Game.SCENE.FIELD &&
-         countFieldNonDragon() < MAX_FIELD_ENEMIES
-       ) {
-         spawnFieldEnemy();
-       }
-       if (
-         Game.state.scene === Game.SCENE.CAVE &&
-         countEnemiesForScene(Game.SCENE.CAVE) < MAX_CAVE_ENEMIES
-       ) {
-         spawnCaveEnemy();
-       }
-       Game.state.enemyRespawnSteps = 0;
-     }
-     moveEnemiesTowardPlayer();
-   }
+    guard = 0;
+    while (countEnemiesForScene(Game.SCENE.CAVE) < MAX_CAVE_ENEMIES && guard < 40) {
+      if (!spawnCaveEnemy()) break;
+      guard += 1;
+    }
+  }
 
-   function removeEnemyById(enemyId) {
-     const idx = Game.state.enemies.findIndex((enemy) => enemy.id === enemyId);
-     if (idx < 0) return;
-     const [removed] = Game.state.enemies.splice(idx, 1);
-     if (removed && removed.kind === "DRAGON") {
-       Game.state.flags.dragonDefeated = true;
-     }
-     Game.state.enemyRespawnSteps = 0;
-     Game.occupancy.markDirty();
-   }
+  function countFieldNonDragon() {
+    return Game.state.enemies.filter(
+      (enemy) => enemy.scene === Game.SCENE.FIELD && enemy.kind !== ENEMY_KIND.DRAGON
+    ).length;
+  }
 
-   function drawEnemies(p, camera) {
-     const enemies = Game.state.enemies.filter((enemy) => enemy.scene === Game.state.scene);
-     enemies.forEach((enemy) => {
-       drawEmoji(p, enemy.emoji, enemy.pos.x, enemy.pos.y, {
-         offsetX: -camera.x,
-         offsetY: -camera.y,
-       });
-     });
-   }
+  function countEnemiesForScene(scene) {
+    return Game.state.enemies.filter((enemy) => enemy.scene === scene).length;
+  }
 
-   Game.entities = {
-     EMOJI_MAP,
-     drawEmoji,
-     getTileOverlay,
-     spawnInitialEnemies,
-     ensureFieldEnemies,
-     ensureCaveEnemies,
-     onPlayerStep,
-     removeEnemyById,
-     drawEnemies,
-   };
- })();
+  function spawnFieldEnemy() {
+    return spawnEnemyForScene(Game.SCENE.FIELD);
+  }
+
+  function spawnCaveEnemy() {
+    return spawnEnemyForScene(Game.SCENE.CAVE);
+  }
+
+  function spawnEnemyForScene(scene) {
+    const map = Game.mapData[scene];
+    if (!map) return false;
+    const position = findSpawnPositionForScene(map, scene);
+    if (!position) return false;
+    const kind = pickEnemyKind(position, map, scene);
+    if (!kind) return false;
+    const enemy = createEnemyInstance(kind, position, scene);
+    Game.state.enemies.push(enemy);
+    Game.occupancy.markDirty();
+    return true;
+  }
+
+  function spawnDragon() {
+    const state = Game.state;
+    if (state.flags.dragonDefeated) return;
+    if (!Game.mapData || !Game.mapData[Game.SCENE.FIELD]) return;
+    if (state.enemies.some((enemy) => enemy.kind === ENEMY_KIND.DRAGON)) return;
+    if (dragonSpawnSpot == null) {
+      dragonSpawnSpot = findDragonSpot();
+    }
+    if (!dragonSpawnSpot) return;
+    if (isOccupiedByEntity(dragonSpawnSpot.x, dragonSpawnSpot.y, Game.SCENE.FIELD)) return;
+    const dragon = createEnemyInstance(ENEMY_KIND.DRAGON, dragonSpawnSpot, Game.SCENE.FIELD);
+    state.enemies.push(dragon);
+    Game.occupancy.markDirty();
+  }
+
+  function findDragonSpot() {
+    const map = Game.mapData ? Game.mapData[Game.SCENE.FIELD] : null;
+    if (!map) return null;
+    for (let y = 0; y < Game.config.gridHeight; y += 1) {
+      for (let x = 0; x < Game.config.gridWidth; x += 1) {
+        if (map.tiles[y][x] === Game.TILE.RUINS) {
+          return { x, y: Math.min(y + 1, Game.config.gridHeight - 1) };
+        }
+      }
+    }
+    return { x: 5, y: 6 };
+  }
+
+  function findSpawnPositionForScene(map, scene) {
+    const attempts = 200;
+    for (let i = 0; i < attempts; i += 1) {
+      const x = Game.utils.randInt(1, Game.config.gridWidth - 2);
+      const y = Game.utils.randInt(1, Game.config.gridHeight - 2);
+      if (!Game.occupancy.isFreeForEnemy(x, y, scene)) continue;
+      if (
+        scene === Game.state.scene &&
+        Game.utils.distance(Game.state.playerPos, { x, y }) < SAFE_DISTANCE_FROM_PLAYER
+      ) {
+        continue;
+      }
+      return { x, y };
+    }
+    return null;
+  }
+
+  function pickEnemyKind(position, map, scene) {
+    const tile = map.tiles[position.y][position.x];
+    if (scene === Game.SCENE.FIELD) {
+      if (tile === Game.TILE.TREE || isNearTile(position, Game.TILE.TREE, 1, scene)) {
+        return Game.utils.choice([ENEMY_KIND.BAT, ENEMY_KIND.SPIDER]);
+      }
+      if (
+        tile === Game.TILE.MOUNTAIN ||
+        tile === Game.TILE.ROCK ||
+        isNearTile(position, Game.TILE.MOUNTAIN, 1, scene) ||
+        isNearTile(position, Game.TILE.ROCK, 1, scene)
+      ) {
+        return ENEMY_KIND.SPIDER;
+      }
+      return Game.utils.choice([ENEMY_KIND.SLIME, ENEMY_KIND.BAT]);
+    }
+    if (scene === Game.SCENE.CAVE) {
+      return Game.utils.choice([ENEMY_KIND.GHOST, ENEMY_KIND.VAMPIRE, ENEMY_KIND.TROLL]);
+    }
+    return null;
+  }
+
+  function isNearTile(position, tileId, radius, scene) {
+    const map = Game.mapData ? Game.mapData[scene] : null;
+    if (!map) return false;
+    for (let dy = -radius; dy <= radius; dy += 1) {
+      for (let dx = -radius; dx <= radius; dx += 1) {
+        const nx = position.x + dx;
+        const ny = position.y + dy;
+        if (nx < 0 || ny < 0 || nx >= Game.config.gridWidth || ny >= Game.config.gridHeight) continue;
+        if (map.tiles[ny][nx] === tileId) return true;
+      }
+    }
+    return false;
+  }
+
+  function createEnemyInstance(kind, position, scene) {
+    const data = Game.ENEMY_DATA[kind] || {};
+    const enemy = {
+      id: Game.nextEnemyInstanceId(),
+      kind,
+      name: data.name || kind,
+      scene,
+      pos: { x: position.x, y: position.y },
+      hp: Game.utils.randInt(data.hp[0], data.hp[1]),
+      maxHp: 0,
+      atk: Game.utils.randInt(data.atk[0], data.atk[1]),
+      def: Game.utils.randInt(data.def[0], data.def[1]),
+      exp: Game.utils.randInt(data.exp[0], data.exp[1]),
+      gold: Game.utils.randInt(data.gold[0], data.gold[1]),
+    };
+    enemy.maxHp = enemy.hp;
+    return enemy;
+  }
+
+  function isOccupiedByEntity(x, y, scene) {
+    const player = Game.state.playerPos;
+    if (scene === Game.state.scene && player.x === x && player.y === y) return true;
+    const merchant = Game.state.merchant;
+    if (merchant.scene === scene && merchant.pos.x === x && merchant.pos.y === y) return true;
+    const innkeeper = Game.state.innkeeper;
+    if (innkeeper.scene === scene && innkeeper.pos.x === x && innkeeper.pos.y === y) return true;
+    return Game.state.enemies.some(
+      (enemy) => enemy.scene === scene && enemy.pos.x === x && enemy.pos.y === y
+    );
+  }
+
+  function moveEnemiesTowardPlayer() {
+    const scene = Game.state.scene;
+    if (scene !== Game.SCENE.FIELD && scene !== Game.SCENE.CAVE) return;
+    if (Game.combat.isActive()) return;
+    const playerPos = Game.state.playerPos;
+    const enemies = Game.state.enemies.filter(
+      (enemy) => enemy.scene === scene && enemy.kind !== ENEMY_KIND.DRAGON
+    );
+    if (!enemies.length) return;
+
+    Game.occupancy.ensure();
+
+    const reserved = new Set();
+    const reserveKey = (pos) => `${pos.x},${pos.y}`;
+
+    for (let i = 0; i < enemies.length; i += 1) {
+      const enemy = enemies[i];
+      const dist = Game.utils.distance(enemy.pos, playerPos);
+      if (dist >= ENEMY_CHASE_DISTANCE) continue;
+      const path = Game.utils.findPath(enemy.pos, playerPos, {
+        scene,
+        allowGoalOccupied: true,
+        canEnter(x, y) {
+          if (x === enemy.pos.x && y === enemy.pos.y) return true;
+          const key = `${x},${y}`;
+          if (reserved.has(key)) return false;
+          return Game.occupancy.isFreeForEnemy(x, y, scene);
+        },
+      });
+      if (!path || path.length < 2) continue;
+      const nextStep = path[1];
+      if (nextStep.x === enemy.pos.x && nextStep.y === enemy.pos.y) continue;
+      enemy.pos.x = nextStep.x;
+      enemy.pos.y = nextStep.y;
+      reserved.add(reserveKey(enemy.pos));
+      if (enemy.pos.x === playerPos.x && enemy.pos.y === playerPos.y) {
+        Game.combat.startBattle(enemy);
+        break;
+      }
+    }
+  }
+
+  function onPlayerStep() {
+    if (Game.combat.isActive()) return;
+    if (Game.state.scene !== Game.SCENE.FIELD && Game.state.scene !== Game.SCENE.CAVE) {
+      Game.state.enemyRespawnSteps = 0;
+      return;
+    }
+    Game.state.enemyRespawnSteps += 1;
+    if (Game.state.enemyRespawnSteps >= RESPAWN_STEP_THRESHOLD) {
+      if (
+        Game.state.scene === Game.SCENE.FIELD &&
+        countFieldNonDragon() < MAX_FIELD_ENEMIES
+      ) {
+        spawnFieldEnemy();
+      }
+      if (
+        Game.state.scene === Game.SCENE.CAVE &&
+        countEnemiesForScene(Game.SCENE.CAVE) < MAX_CAVE_ENEMIES
+      ) {
+        spawnCaveEnemy();
+      }
+      Game.state.enemyRespawnSteps = 0;
+    }
+    moveEnemiesTowardPlayer();
+  }
+
+  function removeEnemyById(enemyId) {
+    const idx = Game.state.enemies.findIndex((enemy) => enemy.id === enemyId);
+    if (idx < 0) return;
+    const [removed] = Game.state.enemies.splice(idx, 1);
+    if (removed && removed.kind === ENEMY_KIND.DRAGON) {
+      Game.state.flags.dragonDefeated = true;
+    }
+    Game.state.enemyRespawnSteps = 0;
+    Game.occupancy.markDirty();
+  }
+
+  function drawEnemies(p, camera) {
+    const enemies = Game.state.enemies.filter((enemy) => enemy.scene === Game.state.scene);
+    enemies.forEach((enemy) => {
+      const options = {
+        offsetX: -camera.x,
+        offsetY: -camera.y,
+      };
+      if (!drawEnemy(p, enemy.kind, enemy.pos.x, enemy.pos.y, options)) {
+        const tileSize = Game.config.tileSize;
+        const screenX = enemy.pos.x * tileSize + options.offsetX;
+        const screenY = enemy.pos.y * tileSize + options.offsetY;
+        p.push();
+        p.noStroke();
+        p.fill(200, 40, 40);
+        p.rect(screenX, screenY, tileSize, tileSize);
+        p.pop();
+      }
+    });
+  }
+
+  Game.entities = {
+    ACTOR_KIND,
+    ENEMY_KIND,
+    OBJECT_KIND,
+    drawActor,
+    drawEnemy,
+    drawObject,
+    spawnInitialEnemies,
+    ensureFieldEnemies,
+    ensureCaveEnemies,
+    onPlayerStep,
+    removeEnemyById,
+    drawEnemies,
+  };
+})();

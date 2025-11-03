@@ -6,17 +6,18 @@
      return !!Game.battle.active;
    }
 
-   function startBattle(enemyInstance) {
-     if (!enemyInstance || Game.battle.active) return;
-     Game.battle.active = true;
-     Game.battle.enemy = {
-       instanceId: enemyInstance.id,
-       kind: enemyInstance.kind,
-       emoji: enemyInstance.emoji,
-       hp: enemyInstance.hp,
-       maxHp: enemyInstance.maxHp,
-       atk: enemyInstance.atk,
-       def: enemyInstance.def,
+  function startBattle(enemyInstance) {
+    if (!enemyInstance || Game.battle.active) return;
+    Game.battle.active = true;
+    const enemyName = enemyInstance.name || enemyInstance.kind;
+    Game.battle.enemy = {
+      instanceId: enemyInstance.id,
+      kind: enemyInstance.kind,
+      name: enemyName,
+      hp: enemyInstance.hp,
+      maxHp: enemyInstance.maxHp,
+      atk: enemyInstance.atk,
+      def: enemyInstance.def,
        exp: enemyInstance.exp,
        gold: enemyInstance.gold,
      };
@@ -24,7 +25,14 @@
      Game.battle.playerDefending = false;
      Game.battle.returnScene = Game.state.scene;
      Game.battle.returnPos = { ...Game.state.playerPos };
-     Game.pushMessage(`${enemyInstance.emoji} があらわれた！`);
+    Game.pushMessage({
+      text: `${enemyName} があらわれた！`,
+      icon: {
+        type: "enemy",
+        kind: enemyInstance.kind,
+        label: enemyName,
+      },
+    });
    }
 
    function playerAction(action) {
@@ -88,7 +96,14 @@
      }
      Game.battle.playerDefending = false;
      Game.state.player.hp = Math.max(0, Game.state.player.hp - dmg);
-     Game.pushMessage(`${enemy.emoji} の攻撃！ ${dmg} ダメージを受けた。`);
+    Game.pushMessage({
+      text: `${enemy.name} の攻撃！ ${dmg} ダメージを受けた。`,
+      icon: {
+        type: "enemy",
+        kind: enemy.kind,
+        label: enemy.name,
+      },
+    });
      if (Game.state.player.hp <= 0) {
        handleDefeat();
        return;
@@ -131,4 +146,3 @@
      getState,
    };
  })();
-

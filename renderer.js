@@ -1,4 +1,4 @@
- (function () {
+﻿ (function () {
    // 描画周りの処理をまとめて管理
    const Game = (window.Game = window.Game || {});
 
@@ -98,20 +98,11 @@
            p.imageMode(p.CORNER);
            drawSprite(p, spriteIndex, screenX, screenY);
            p.pop();
-         } else {
-           // フォールバック: スプライトが定義されていないタイルは従来の方法で描画
-           const color = Game.TILE_COLOR[tileId] || "#333333";
-           p.fill(color);
-           p.rect(screenX, screenY, tileSize, tileSize);
-           const overlay = Game.entities.getTileOverlay(tileId);
-           if (overlay) {
-             p.fill(255);
-             Game.entities.drawEmoji(p, overlay, x, y, {
-               offsetX: -camera.x,
-               offsetY: -camera.y,
-             });
-           }
-         }
+        } else {
+          const color = Game.TILE_COLOR[tileId] || "#333333";
+          p.fill(color);
+          p.rect(screenX, screenY, tileSize, tileSize);
+        }
        }
      }
      p.pop();
@@ -127,40 +118,32 @@
      if (Game.entities && Game.entities.drawEnemies) {
        Game.entities.drawEnemies(p, camera);
      }
-     Game.entities.drawEmoji(
-       p,
-       Game.entities.EMOJI_MAP.PLAYER,
-       state.playerPos.x,
-       state.playerPos.y,
-       {
-         offsetX: -camera.x,
-         offsetY: -camera.y,
-       }
-     );
-     if (state.scene === state.merchant.scene) {
-       Game.entities.drawEmoji(
-         p,
-         Game.entities.EMOJI_MAP.MERCHANT,
-         state.merchant.pos.x,
-         state.merchant.pos.y,
-         {
-           offsetX: -camera.x,
-           offsetY: -camera.y,
-         }
-       );
-     }
-     if (state.scene === state.innkeeper.scene) {
-       Game.entities.drawEmoji(
-         p,
-         Game.entities.EMOJI_MAP.INNKEEPER,
-         state.innkeeper.pos.x,
-         state.innkeeper.pos.y,
-         {
-           offsetX: -camera.x,
-           offsetY: -camera.y,
-         }
-       );
-     }
+    const actorDrawOptions = {
+      offsetX: -camera.x,
+      offsetY: -camera.y,
+    };
+    const drawActorOrFallback = (kind, position) => {
+      const ok = Game.entities.drawActor(p, kind, position.x, position.y, actorDrawOptions);
+      if (!ok) {
+        p.push();
+        p.noStroke();
+        p.fill(240);
+        p.rect(
+          position.x * Game.config.tileSize + actorDrawOptions.offsetX,
+          position.y * Game.config.tileSize + actorDrawOptions.offsetY,
+          Game.config.tileSize,
+          Game.config.tileSize
+        );
+        p.pop();
+      }
+    };
+    drawActorOrFallback(Game.entities.ACTOR_KIND.PLAYER, state.playerPos);
+    if (state.scene === state.merchant.scene) {
+      drawActorOrFallback(Game.entities.ACTOR_KIND.MERCHANT, state.merchant.pos);
+    }
+    if (state.scene === state.innkeeper.scene) {
+      drawActorOrFallback(Game.entities.ACTOR_KIND.INNKEEPER, state.innkeeper.pos);
+    }
      p.pop();
    }
 
@@ -169,15 +152,33 @@
      const scene = Game.state.scene;
      const events = Game.EVENTS[scene];
      if (!events) return;
-     if (Array.isArray(events.chests)) {
-       events.chests.forEach((pos) => {
-         if (Game.hasOpened && Game.hasOpened(scene, pos.x, pos.y)) return;
-         Game.entities.drawEmoji(p, Game.entities.EMOJI_MAP.CHEST, pos.x, pos.y, {
-           offsetX: -camera.x,
-           offsetY: -camera.y,
-         });
-       });
-     }
+    if (Array.isArray(events.chests)) {
+      events.chests.forEach((pos) => {
+        if (Game.hasOpened && Game.hasOpened(scene, pos.x, pos.y)) return;
+        const options = {
+          offsetX: -camera.x,
+          offsetY: -camera.y,
+        };
+        if (
+          !Game.entities.drawObject(
+            p,
+            Game.entities.OBJECT_KIND.CHEST,
+            pos.x,
+            pos.y,
+            options
+          )
+        ) {
+          const tileSize = Game.config.tileSize;
+          const sx = pos.x * tileSize + options.offsetX;
+          const sy = pos.y * tileSize + options.offsetY;
+          p.push();
+          p.noStroke();
+          p.fill(200, 160, 60);
+          p.rect(sx, sy, tileSize, tileSize);
+          p.pop();
+        }
+      });
+    }
      // RUINS はマップタイルとしてスプライト描画されるため、ここでの描画は不要
    }
 
@@ -186,20 +187,59 @@
      drawStatusPanel(p);
    }
 
-   function drawMessagePanel(p) {
-     const x = layout.panelWidth;
-     const y = layout.mapAreaHeight;
-     p.fill(15, 15, 15);
-     p.stroke(80);
-     p.rect(x, y, layout.panelWidth, layout.panelHeight);
-     p.fill(240);
-     p.textAlign(p.LEFT, p.TOP);
-     p.textSize(16);
-     const messages = Game.state.messages.slice(-4);
-     messages.forEach((line, index) => {
-       p.text(line, x + 12, y + 12 + index * 24);
-     });
-   }
+  function drawMessagePanel(p) {
+    const x = layout.panelWidth;
+    const y = layout.mapAreaHeight;
+    p.fill(15, 15, 15);
+    p.stroke(80);
+    p.rect(x, y, layout.panelWidth, layout.panelHeight);
+    p.fill(240);
+    p.textAlign(p.LEFT, p.TOP);
+    p.textSize(16);
+    const messages = Game.state.messages.slice(-4);
+    const lineHeight = 24;
+    const iconSize = 20;
+    messages.forEach((entryRaw, index) => {
+      const entry =
+        typeof entryRaw === "string" || entryRaw == null
+          ? { text: entryRaw || "" }
+          : entryRaw;
+      const lineY = y + 12 + index * lineHeight;
+      let textX = x + 12;
+      if (
+        entry.icon &&
+        entry.icon.type === "enemy" &&
+        entry.icon.kind &&
+        Game.entities &&
+        typeof Game.entities.drawEnemy === "function"
+      ) {
+        const iconY = lineY + (lineHeight - iconSize) / 2;
+        const drawn = Game.entities.drawEnemy(
+          p,
+          entry.icon.kind,
+          textX,
+          iconY,
+          {
+            useScreenCoordinates: true,
+            drawSize: iconSize,
+          }
+        );
+        if (drawn) {
+          textX += iconSize + 6;
+        } else if (entry.icon.label) {
+          const label = entry.icon.label;
+          p.text(label, textX, lineY);
+          textX += p.textWidth(label) + 6;
+        }
+      } else if (entry.icon && entry.icon.label) {
+        const label = entry.icon.label;
+        p.text(label, textX, lineY);
+        textX += p.textWidth(label) + 6;
+      }
+      const text = entry.text != null ? String(entry.text) : "";
+      p.text(text, textX, lineY);
+    });
+  }
 
    function drawStatusPanel(p) {
      const x = 0;
@@ -358,28 +398,52 @@
    }
 
    function drawBattleOverlay(p = window) {
-     if (!Game.combat.isActive()) return;
-     drawOverlayFrame(p);
-     const battle = Game.combat.getState();
-     const enemy = battle.enemy;
-     p.fill(255);
-     p.textAlign(p.LEFT, p.TOP);
-     p.textSize(20);
-     p.text(
-       `Enemy: ${enemy.emoji}  HP ${enemy.hp}/${enemy.maxHp}`,
-       overlayArea.x + 16,
-       overlayArea.y + 18
-     );
-     p.textSize(16);
-     p.text("A:攻撃  D:防御  R:逃げる", overlayArea.x + 16, overlayArea.y + 52);
-     p.text(
-       `プレイヤーHP: ${Game.state.player.hp}/${Game.state.player.maxHp}`,
-       overlayArea.x + 16,
-       overlayArea.y + 84
-     );
-   }
-
-   function drawClearOverlay(p = window) {
+    if (!Game.combat.isActive()) return;
+    drawOverlayFrame(p);
+    const battle = Game.combat.getState();
+    const enemy = battle.enemy;
+    p.fill(255);
+    p.textAlign(p.LEFT, p.TOP);
+    const iconSize = 36;
+    const iconX = overlayArea.x + 16;
+    const iconY = overlayArea.y + 16;
+    let textX = iconX;
+    let enemyIconDrawn = false;
+    if (
+      enemy &&
+      enemy.kind &&
+      Game.entities &&
+      typeof Game.entities.drawEnemy === "function"
+    ) {
+      enemyIconDrawn = Game.entities.drawEnemy(p, enemy.kind, iconX, iconY, {
+        useScreenCoordinates: true,
+        drawSize: iconSize,
+      });
+      if (enemyIconDrawn) {
+        textX += iconSize + 12;
+      }
+    }
+    if (!enemyIconDrawn) {
+      p.push();
+      p.noStroke();
+      p.fill(200, 40, 40);
+      p.rect(iconX, iconY, iconSize, iconSize);
+      p.pop();
+      textX += iconSize + 12;
+    }
+    const enemyName = enemy && enemy.name ? enemy.name : enemy && enemy.kind ? enemy.kind : "";
+    p.textSize(20);
+    p.text(`Enemy: ${enemyName}`, textX, overlayArea.y + 18);
+    p.textSize(16);
+    p.text(`HP ${enemy.hp}/${enemy.maxHp}`, textX, overlayArea.y + 48);
+    p.text("A:攻撃  D:防御  R:逃走", textX, overlayArea.y + 72);
+    p.text(
+      `プレイヤーHP: ${Game.state.player.hp}/${Game.state.player.maxHp}`,
+      textX,
+      overlayArea.y + 96
+    );
+  }
+  function drawClearOverlay(p = window) {
      if (!Game.flags || !Game.flags.cleared) return;
      p.push();
      p.noStroke();
@@ -424,3 +488,9 @@
      drawClearOverlay,
    };
  })();
+
+
+
+
+
+
