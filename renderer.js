@@ -91,23 +91,15 @@
          const tileId = map.tiles[y][x];
          const spriteIndex = TILE_TO_SPRITE_INDEX[tileId];
 
-         // Phase 1: 背景タイルのみスプライトを使用
-         const isBackgroundTile = [
-           Game.TILE.GRASS,
-           Game.TILE.ROAD,
-           Game.TILE.WATER,
-           Game.TILE.FLOOR_CAVE,
-           Game.TILE.FLOOR_BUILD
-         ].includes(tileId);
-
-         if (isBackgroundTile && spriteIndex !== undefined) {
+         // Phase 2: 全タイルをスプライトで描画
+         if (spriteIndex !== undefined) {
            // スプライトで描画
            p.push();
            p.imageMode(p.CORNER);
            drawSprite(p, spriteIndex, screenX, screenY);
            p.pop();
          } else {
-           // 従来の方法（色+絵文字）で描画
+           // フォールバック: スプライトが定義されていないタイルは従来の方法で描画
            const color = Game.TILE_COLOR[tileId] || "#333333";
            p.fill(color);
            p.rect(screenX, screenY, tileSize, tileSize);
