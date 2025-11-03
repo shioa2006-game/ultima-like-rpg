@@ -18,11 +18,12 @@
      f: F.FLOOR_SHOP,
      v: F.ENTRANCE_VIL,
      h: F.ENTRANCE_CAVE,
-     x: F.CAVE_EXIT,
+     x: F.STAIRS_UP,
+     y: F.STAIRS_DOWN,
      u: F.RUINS,
    };
 
-   const reservedChars = new Set(["d", "v", "h", "x", "u"]);
+   const reservedChars = new Set(["d", "v", "h", "x", "y", "u"]);
 
    function normalizeRows(rows) {
      return rows.map((row) => row.replace(/\s+/g, ""));
@@ -237,7 +238,7 @@
        },
        entrances: [
          {
-           tile: F.CAVE_EXIT,
+           tile: F.STAIRS_UP,
            position: caveExit,
            targetScene: scenes.FIELD,
            targetSpawn: "fromCave",
