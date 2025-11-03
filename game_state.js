@@ -6,8 +6,8 @@
      canvasWidth: 800,
      canvasHeight: 600,
      tileSize: 48,
-     gridWidth: 16,
-     gridHeight: 10,
+     gridWidth: 24,
+     gridHeight: 18,
    });
 
    const SCENE = Object.freeze({
