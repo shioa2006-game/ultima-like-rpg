@@ -3,14 +3,14 @@
    const Game = (window.Game = window.Game || {});
 
    const tileSize = Game.config.tileSize;
-   const mapAreaHeight = 420;
+   const mapAreaHeight = 480;
 
    const layout = {
      mapAreaWidth: Game.config.canvasWidth,
      mapAreaHeight,
      mapOffsetX: 0,
      mapOffsetY: 0,
-     panelHeight: 180,
+     panelHeight: 120,
      panelWidth: Game.config.canvasWidth / 2,
    };
 
@@ -20,6 +20,48 @@
      width: Game.config.canvasWidth - 80,
      height: mapAreaHeight - 100,
    };
+
+   // スプライトシート設定
+   const SPRITE_SIZE = 48;
+   const SPRITE_COLS = 8;
+
+   // タイルIDからスプライトインデックスへのマッピング
+   const TILE_TO_SPRITE_INDEX = {
+     [Game.TILE.GRASS]: 0,
+     [Game.TILE.ROAD]: 1,
+     [Game.TILE.WATER]: 2,
+     [Game.TILE.FLOOR_CAVE]: 3,
+     [Game.TILE.FLOOR_BUILD]: 4,
+     [Game.TILE.MOUNTAIN]: 5,
+     [Game.TILE.ROCK]: 6,
+     [Game.TILE.TREE]: 7,
+     [Game.TILE.WALL]: 8,
+     [Game.TILE.DOOR]: 9,
+     [Game.TILE.ENTRANCE_VIL]: 10,
+     [Game.TILE.ENTRANCE_CAVE]: 11,
+     [Game.TILE.STAIRS_UP]: 12,
+     [Game.TILE.STAIRS_DOWN]: 13,
+     [Game.TILE.RUINS]: 14,
+   };
+
+   // スプライトを描画する関数
+   function drawSprite(p, spriteIndex, screenX, screenY) {
+     if (!Game.assets || !Game.assets.tilesSheet) return false;
+
+     const col = spriteIndex % SPRITE_COLS;
+     const row = Math.floor(spriteIndex / SPRITE_COLS);
+     const sx = col * SPRITE_SIZE;
+     const sy = row * SPRITE_SIZE;
+
+     p.image(
+       Game.assets.tilesSheet,
+       screenX, screenY,
+       tileSize, tileSize,
+       sx, sy,
+       SPRITE_SIZE, SPRITE_SIZE
+     );
+     return true;
+   }
 
    function getCamera() {
      const player = Game.state.playerPos;
@@ -47,16 +89,36 @@
          const screenX = x * tileSize - camera.x;
          if (screenX + tileSize < 0 || screenX > layout.mapAreaWidth) continue;
          const tileId = map.tiles[y][x];
-         const color = Game.TILE_COLOR[tileId] || "#333333";
-         p.fill(color);
-         p.rect(screenX, screenY, tileSize, tileSize);
-         const overlay = Game.entities.getTileOverlay(tileId);
-         if (overlay) {
-           p.fill(255);
-           Game.entities.drawEmoji(p, overlay, x, y, {
-             offsetX: -camera.x,
-             offsetY: -camera.y,
-           });
+         const spriteIndex = TILE_TO_SPRITE_INDEX[tileId];
+
+         // Phase 1: 背景タイルのみスプライトを使用
+         const isBackgroundTile = [
+           Game.TILE.GRASS,
+           Game.TILE.ROAD,
+           Game.TILE.WATER,
+           Game.TILE.FLOOR_CAVE,
+           Game.TILE.FLOOR_BUILD
+         ].includes(tileId);
+
+         if (isBackgroundTile && spriteIndex !== undefined) {
+           // スプライトで描画
+           p.push();
+           p.imageMode(p.CORNER);
+           drawSprite(p, spriteIndex, screenX, screenY);
+           p.pop();
+         } else {
+           // 従来の方法（色+絵文字）で描画
+           const color = Game.TILE_COLOR[tileId] || "#333333";
+           p.fill(color);
+           p.rect(screenX, screenY, tileSize, tileSize);
+           const overlay = Game.entities.getTileOverlay(tileId);
+           if (overlay) {
+             p.fill(255);
+             Game.entities.drawEmoji(p, overlay, x, y, {
+               offsetX: -camera.x,
+               offsetY: -camera.y,
+             });
+           }
          }
        }
      }

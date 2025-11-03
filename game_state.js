@@ -5,9 +5,9 @@
    const config = Object.freeze({
      canvasWidth: 800,
      canvasHeight: 600,
-     tileSize: 40,
-     gridWidth: 24,
-     gridHeight: 18,
+     tileSize: 48,
+     gridWidth: 16,
+     gridHeight: 10,
    });
 
    const SCENE = Object.freeze({
@@ -21,7 +21,7 @@
      ROAD: "ROAD",
      WATER: "WATER",
      FLOOR_CAVE: "FLOOR_CAVE",
-     FLOOR_SHOP: "FLOOR_SHOP",
+     FLOOR_BUILD: "FLOOR_BUILD",
      MOUNTAIN: "MOUNTAIN",
      ROCK: "ROCK",
      TREE: "TREE",
@@ -39,7 +39,7 @@
      [TILE.ROAD]: "#B57A43",
      [TILE.WATER]: "#2F6DD5",
      [TILE.FLOOR_CAVE]: "#444444",
-     [TILE.FLOOR_SHOP]: "#5A3A2A",
+     [TILE.FLOOR_BUILD]: "#5A3A2A",
      [TILE.MOUNTAIN]: "#5B4E3A",
      [TILE.ROCK]: "#555555",
      [TILE.TREE]: "#5DA147",

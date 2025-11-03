@@ -15,7 +15,7 @@
      w: F.WALL,
      d: F.DOOR,
      c: F.FLOOR_CAVE,
-     f: F.FLOOR_SHOP,
+     f: F.FLOOR_BUILD,
      v: F.ENTRANCE_VIL,
      h: F.ENTRANCE_CAVE,
      x: F.STAIRS_UP,

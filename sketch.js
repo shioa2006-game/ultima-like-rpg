@@ -1,4 +1,11 @@
 // p5.js のエントリポイント
+function preload() {
+  // スプライトシートの読み込み
+  if (!window.Game) window.Game = {};
+  if (!window.Game.assets) window.Game.assets = {};
+  window.Game.assets.tilesSheet = loadImage('assets/tiles.png');
+}
+
 function setup() {
   const canvas = createCanvas(Game.config.canvasWidth, Game.config.canvasHeight);
   canvas.parent("game-root");
