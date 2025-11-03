@@ -208,7 +208,7 @@
      p.fill(240);
      p.textAlign(p.LEFT, p.TOP);
      p.textSize(16);
-     const messages = Game.state.messages.slice(-7);
+     const messages = Game.state.messages.slice(-4);
      messages.forEach((line, index) => {
        p.text(line, x + 12, y + 12 + index * 24);
      });
