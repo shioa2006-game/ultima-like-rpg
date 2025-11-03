@@ -5,9 +5,9 @@
    const config = Object.freeze({
      canvasWidth: 800,
      canvasHeight: 600,
-     tileSize: 40,
-     gridWidth: 24,
-     gridHeight: 18,
+     tileSize: 48,
+     gridWidth: 16,
+     gridHeight: 10,
    });
 
    const SCENE = Object.freeze({
