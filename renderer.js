@@ -178,12 +178,7 @@
          });
        });
      }
-     if (events.ruins) {
-       Game.entities.drawEmoji(p, Game.entities.EMOJI_MAP.RUINS, events.ruins.x, events.ruins.y, {
-         offsetX: -camera.x,
-         offsetY: -camera.y,
-       });
-     }
+     // RUINS はマップタイルとしてスプライト描画されるため、ここでの描画は不要
    }
 
    function drawPanels(p = window) {
