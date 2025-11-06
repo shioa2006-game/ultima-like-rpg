@@ -27,6 +27,9 @@ function draw() {
   Game.renderer.drawOverlays();
   Game.renderer.drawBattleOverlay();
   Game.renderer.drawClearOverlay();
+
+  // 連続移動処理
+  Game.input.update();
 }
 
 function keyPressed() {
@@ -37,4 +40,9 @@ function keyPressed() {
     return;
   }
   Game.input.handleKeyPressed(key, keyCode);
+}
+
+function keyReleased() {
+  // キーが離されたときの処理
+  Game.input.handleKeyReleased(keyCode);
 }
