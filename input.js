@@ -4,6 +4,14 @@
 
    const hungerScenes = new Set([Game.SCENE.FIELD, Game.SCENE.CAVE]);
 
+   // キー押し続け対応のための状態管理
+   const keyState = {
+     pressed: {},           // 現在押されているキーの状態 {keyCode: true/false}
+     lastPressed: null,     // 最後に押された矢印キー（後押し優先用）
+     moveTimer: 0,          // 移動タイマー（フレームカウント）
+     moveInterval: 8        // 移動間隔（約8フレーム = 約0.13秒 @60fps）
+   };
+
    function handleKeyPressed(keyValue, keyCode) {
      Game.occupancy.ensure();
      if (Game.combat.isActive()) {
@@ -18,8 +26,16 @@
      }
 
      if (isArrowKey(keyCode)) {
+       // キーの押下状態を記録
+       keyState.pressed[keyCode] = true;
+       keyState.lastPressed = keyCode;
+
+       // 初回は即座に移動
        const delta = arrowToDelta(keyCode);
        tryMove(delta.x, delta.y);
+
+       // 移動タイマーをリセット
+       keyState.moveTimer = 0;
        return;
      }
 
@@ -308,8 +324,44 @@
      }
    }
 
+   function handleKeyReleased(keyCode) {
+     // 矢印キーが離されたときの処理
+     if (!isArrowKey(keyCode)) return;
+
+     // キーの押下状態を解除
+     delete keyState.pressed[keyCode];
+
+     // 離されたキーが最後に押されたキーの場合、他に押されている矢印キーを探す
+     if (keyState.lastPressed === keyCode) {
+       // 他に押されている矢印キーを探す
+       const arrowKeys = [window.LEFT_ARROW, window.RIGHT_ARROW, window.UP_ARROW, window.DOWN_ARROW];
+       const stillPressed = arrowKeys.find(key => keyState.pressed[key]);
+       keyState.lastPressed = stillPressed || null;
+       keyState.moveTimer = 0; // タイマーをリセット
+     }
+   }
+
+   function update() {
+     // 連続移動処理（毎フレーム呼ばれる）
+     if (!keyState.lastPressed) return;
+     if (Game.combat.isActive()) return;
+     if (Game.ui.state.overlay) return;
+
+     // タイマーをインクリメント
+     keyState.moveTimer++;
+
+     // 指定間隔に達したら移動
+     if (keyState.moveTimer >= keyState.moveInterval) {
+       const delta = arrowToDelta(keyState.lastPressed);
+       tryMove(delta.x, delta.y);
+       keyState.moveTimer = 0;
+     }
+   }
+
    Game.input = {
      handleKeyPressed,
+     handleKeyReleased,
+     update,
    };
  })();
 
