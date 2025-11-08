@@ -2,7 +2,7 @@
    // 入力全般を管理し、移動・会話・UI 切り替えを制御
    const Game = (window.Game = window.Game || {});
 
-   const hungerScenes = new Set([Game.SCENE.FIELD, Game.SCENE.CAVE]);
+  const hungerScenes = new Set([Game.SCENE.FIELD, Game.SCENE.CAVE, Game.SCENE.CAVE_B2]);
 
    // キー押し続け対応のための状態管理
    const keyState = {
@@ -364,4 +364,3 @@
      update,
    };
  })();
-

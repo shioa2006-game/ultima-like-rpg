@@ -56,6 +56,10 @@
   const SAFE_DISTANCE_FROM_PLAYER = 4;
   const ENEMY_CHASE_DISTANCE = 7;
 
+  function isCaveScene(scene) {
+    return scene === Game.SCENE.CAVE || scene === Game.SCENE.CAVE_B2;
+  }
+
   let dragonSpawnSpot = null;
 
   function drawActor(g, actorType, gridX, gridY, options = {}) {
@@ -183,21 +187,22 @@
   }
 
   function ensureCaveEnemies() {
-    if (!Game.mapData || !Game.mapData[Game.SCENE.CAVE]) return;
-    if (Game.state.scene !== Game.SCENE.CAVE) return;
+    const scene = Game.state.scene;
+    if (!isCaveScene(scene)) return;
+    if (!Game.mapData || !Game.mapData[scene]) return;
 
     Game.occupancy.markDirty();
     Game.occupancy.ensure();
 
     let guard = 0;
-    while (countEnemiesForScene(Game.SCENE.CAVE) < MIN_CAVE_ENEMIES && guard < 20) {
-      if (!spawnCaveEnemy()) break;
+    while (countEnemiesForScene(scene) < MIN_CAVE_ENEMIES && guard < 20) {
+      if (!spawnCaveEnemy(scene)) break;
       guard += 1;
     }
 
     guard = 0;
-    while (countEnemiesForScene(Game.SCENE.CAVE) < MAX_CAVE_ENEMIES && guard < 40) {
-      if (!spawnCaveEnemy()) break;
+    while (countEnemiesForScene(scene) < MAX_CAVE_ENEMIES && guard < 40) {
+      if (!spawnCaveEnemy(scene)) break;
       guard += 1;
     }
   }
@@ -216,8 +221,9 @@
     return spawnEnemyForScene(Game.SCENE.FIELD);
   }
 
-  function spawnCaveEnemy() {
-    return spawnEnemyForScene(Game.SCENE.CAVE);
+  function spawnCaveEnemy(targetScene = Game.state.scene) {
+    if (!isCaveScene(targetScene)) return false;
+    return spawnEnemyForScene(targetScene);
   }
 
   function spawnEnemyForScene(scene) {
@@ -294,7 +300,7 @@
       }
       return Game.utils.choice([ENEMY_KIND.SLIME, ENEMY_KIND.BAT]);
     }
-    if (scene === Game.SCENE.CAVE) {
+    if (isCaveScene(scene)) {
       return Game.utils.choice([ENEMY_KIND.GHOST, ENEMY_KIND.VAMPIRE, ENEMY_KIND.TROLL]);
     }
     return null;
@@ -347,7 +353,7 @@
 
   function moveEnemiesTowardPlayer() {
     const scene = Game.state.scene;
-    if (scene !== Game.SCENE.FIELD && scene !== Game.SCENE.CAVE) return;
+    if (scene !== Game.SCENE.FIELD && !isCaveScene(scene)) return;
     if (Game.combat.isActive()) return;
     const playerPos = Game.state.playerPos;
     const enemies = Game.state.enemies.filter(
@@ -389,23 +395,20 @@
 
   function onPlayerStep() {
     if (Game.combat.isActive()) return;
-    if (Game.state.scene !== Game.SCENE.FIELD && Game.state.scene !== Game.SCENE.CAVE) {
+    const scene = Game.state.scene;
+    const onField = scene === Game.SCENE.FIELD;
+    const onCaveFloor = isCaveScene(scene);
+    if (!onField && !onCaveFloor) {
       Game.state.enemyRespawnSteps = 0;
       return;
     }
     Game.state.enemyRespawnSteps += 1;
     if (Game.state.enemyRespawnSteps >= RESPAWN_STEP_THRESHOLD) {
-      if (
-        Game.state.scene === Game.SCENE.FIELD &&
-        countFieldNonDragon() < MAX_FIELD_ENEMIES
-      ) {
+      if (onField && countFieldNonDragon() < MAX_FIELD_ENEMIES) {
         spawnFieldEnemy();
       }
-      if (
-        Game.state.scene === Game.SCENE.CAVE &&
-        countEnemiesForScene(Game.SCENE.CAVE) < MAX_CAVE_ENEMIES
-      ) {
-        spawnCaveEnemy();
+      if (onCaveFloor && countEnemiesForScene(scene) < MAX_CAVE_ENEMIES) {
+        spawnCaveEnemy(scene);
       }
       Game.state.enemyRespawnSteps = 0;
     }

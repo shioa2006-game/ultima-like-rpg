@@ -105,39 +105,73 @@
      "w w w w w w w w w w w d w w w w w w w w w w w w",
    ]);
 
-   const CAVE_RAW = normalizeRows([
-     "s s s s s s s s s s s s s s s s s s s s s s s s",
-     "s c c c c c c c c c x c c c c c c c c c c c c s",
-     "s c s s c c c c c c c c c c c c c c c c c c c s",
-     "s c c c c c s c c c c c c c c c c c s s s c c s",
-     "s c c c c c s c c c c c c c c c c c c c c c c s",
-     "s c c c c c s c c s s c c c c c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c c c c c c c c s",
-     "s c c s s c c c c c c c c c c c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c c c c c c c c s",
-     "s c c c s c c c c c s s c c c c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c s s c c c c c s",
-     "s c c c c c c c s c c c c c c c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c c c c c c c c s",
-     "s c c c s s c c c c c c c s s c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c c c c c c c c s",
-     "s c c c c c c c c c c c c c c c c c c c c c c s",
-     "s s s s s s s s s s s s s s s s s s s s s s s s",
-   ]);
+  const CAVE_B1_RAW = normalizeRows([
+    "s s s s s s s s s s s s s s s s s s s s s s s s",
+    "s c c c c c c c c c x c c c c c c c c c c c c s",
+    "s c s s c c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c s c c c c c c c c c c c s s s c c s",
+    "s c c c c c s c c c c c c c c c c c c c c c c s",
+    "s c c c c c s c c s s c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c s s c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c s c c c c c s s c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c s s c c c c c s",
+    "s c c c c c c c s c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c s s c c c c c c c s s c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c y s",
+    "s s s s s s s s s s s s s s s s s s s s s s s s",
+  ]);
 
-   const fieldTiles = createTiles(FIELD_RAW);
-   const villageTiles = createTiles(VILLAGE_RAW);
-   const caveTiles = createTiles(CAVE_RAW);
+  const CAVE_B2_RAW = normalizeRows([
+    "s s s s s s s s s s s s s s s s s s s s s s s s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c s s c c c c c c c c s",
+    "s c c c s s c c c c c c c c c c c c c c s s c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c s s c c c c c c c c c c c s",
+    "s c c c c c s c c c c c c c c c c c c c c c c s",
+    "s c c s c c s c c c c c c c c c c c c c c c c s",
+    "s c c s c c c c c c c c c c c s c c c c c c c s",
+    "s c c c c c c c c s c c c c c s c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c s c c c c c s",
+    "s c c c c s s c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c s c c c c c s c c c c c s",
+    "s c c c c c s c c c c c c c c c c c c c c c c s",
+    "s c c c c c c s s c c c c c c c c c c c c c c s",
+    "s c c c c c c c c c c c c c c c c c c c c c x s",
+    "s s s s s s s s s s s s s s s s s s s s s s s s",
+  ]);
 
-   const fieldVillageEntrances = findPositions(FIELD_RAW, "v");
-   const fieldCaveEntrances = findPositions(FIELD_RAW, "h");
-   const villageDoors = findPositions(VILLAGE_RAW, "d");
-   const caveExits = findPositions(CAVE_RAW, "x");
+  const fieldTiles = createTiles(FIELD_RAW);
+  const villageTiles = createTiles(VILLAGE_RAW);
+  const caveB1Tiles = createTiles(CAVE_B1_RAW);
+  const caveB2Tiles = createTiles(CAVE_B2_RAW);
 
-   const fieldVillageEntry = fieldVillageEntrances[0] || { x: 10, y: 8 };
-   const fieldCaveEntry = fieldCaveEntrances[0] || { x: 18, y: 3 };
-   const caveExit = caveExits[0] || { x: 10, y: 1 };
+  const fieldVillageEntrances = findPositions(FIELD_RAW, "v");
+  const fieldCaveEntrances = findPositions(FIELD_RAW, "h");
+  const villageDoors = findPositions(VILLAGE_RAW, "d");
+  const caveUpStairs = findPositions(CAVE_B1_RAW, "x");
+  const caveDownStairs = findPositions(CAVE_B1_RAW, "y");
+  const caveB2UpStairs = findPositions(CAVE_B2_RAW, "x");
+
+  const fieldVillageEntry = fieldVillageEntrances[0] || { x: 10, y: 8 };
+  const fieldCaveEntry = fieldCaveEntrances[0] || { x: 18, y: 3 };
+  const caveExit = caveUpStairs[0] || { x: 10, y: 1 };
+  const caveDown =
+    caveDownStairs[0] || {
+      x: caveExit.x,
+      y: Math.min(caveExit.y + 2, Game.config.gridHeight - 2),
+    };
+  const caveB2Entry =
+    caveB2UpStairs[0] || {
+      x: caveDown.x,
+      y: Math.max(caveDown.y - 1, 0),
+    };
 
    const defaultVillageDoor = { x: 11, y: 17 };
    // 村の扉座標を南北で抽出
@@ -157,14 +191,26 @@
      }, null) || { x: villageDoorSouth.x, y: villageDoorSouth.y };
 
    // フィールドへ戻る際の出現位置を扉ごとに定義
-   const fieldSpawnFromVillageSouth = {
-     x: fieldVillageEntry.x,
-     y: Math.min(fieldVillageEntry.y + 1, Game.config.gridHeight - 1),
-   };
-   const fieldSpawnFromVillageNorth = {
-     x: fieldVillageEntry.x,
-     y: Math.max(fieldVillageEntry.y - 1, 0),
-   };
+  const fieldSpawnFromVillageSouth = {
+    x: fieldVillageEntry.x,
+    y: Math.min(fieldVillageEntry.y + 1, Game.config.gridHeight - 1),
+  };
+  const fieldSpawnFromVillageNorth = {
+    x: fieldVillageEntry.x,
+    y: Math.max(fieldVillageEntry.y - 1, 0),
+  };
+  const caveSpawnFromField = {
+    x: caveExit.x,
+    y: Math.min(caveExit.y + 1, Game.config.gridHeight - 1),
+  };
+  const caveSpawnFromLower = {
+    x: caveDown.x,
+    y: Math.max(caveDown.y - 1, 0),
+  };
+  const caveB2SpawnFromUpper = {
+    x: caveB2Entry.x,
+    y: Math.max(caveB2Entry.y - 1, 0),
+  };
 
    // 村の扉ごとにフィールドへの移動設定を作成
    const villageEntrances = [
@@ -184,9 +230,10 @@
      });
    }
 
-   const fieldReservedTiles = collectReservedPositions(FIELD_RAW);
-   const villageReservedTiles = collectReservedPositions(VILLAGE_RAW);
-   const caveReservedTiles = collectReservedPositions(CAVE_RAW);
+  const fieldReservedTiles = collectReservedPositions(FIELD_RAW);
+  const villageReservedTiles = collectReservedPositions(VILLAGE_RAW);
+  const caveB1ReservedTiles = collectReservedPositions(CAVE_B1_RAW);
+  const caveB2ReservedTiles = collectReservedPositions(CAVE_B2_RAW);
 
    Game.mapData = {
      [scenes.FIELD]: {
@@ -229,30 +276,53 @@
        },
        entrances: villageEntrances,
      },
-     [scenes.CAVE]: {
-       tiles: caveTiles,
-       reservedTiles: caveReservedTiles,
-       spawnPoints: {
-         default: { x: caveExit.x, y: caveExit.y + 1 },
-         fromField: { x: caveExit.x, y: caveExit.y + 1 },
-       },
-       entrances: [
-         {
-           tile: F.STAIRS_UP,
-           position: caveExit,
-           targetScene: scenes.FIELD,
-           targetSpawn: "fromCave",
-         },
-       ],
-     },
-   };
+    [scenes.CAVE]: {
+      tiles: caveB1Tiles,
+      reservedTiles: caveB1ReservedTiles,
+      spawnPoints: {
+        default: { x: caveSpawnFromField.x, y: caveSpawnFromField.y },
+        fromField: { x: caveSpawnFromField.x, y: caveSpawnFromField.y },
+        fromLower: { x: caveSpawnFromLower.x, y: caveSpawnFromLower.y },
+      },
+      entrances: [
+        {
+          tile: F.STAIRS_UP,
+          position: caveExit,
+          targetScene: scenes.FIELD,
+          targetSpawn: "fromCave",
+        },
+        {
+          tile: F.STAIRS_DOWN,
+          position: caveDown,
+          targetScene: scenes.CAVE_B2,
+          targetSpawn: "fromUpper",
+        },
+      ],
+    },
+    [scenes.CAVE_B2]: {
+      tiles: caveB2Tiles,
+      reservedTiles: caveB2ReservedTiles,
+      spawnPoints: {
+        default: { x: caveB2SpawnFromUpper.x, y: caveB2SpawnFromUpper.y },
+        fromUpper: { x: caveB2SpawnFromUpper.x, y: caveB2SpawnFromUpper.y },
+      },
+      entrances: [
+        {
+          tile: F.STAIRS_UP,
+          position: caveB2Entry,
+          targetScene: scenes.CAVE,
+          targetSpawn: "fromLower",
+        },
+      ],
+    },
+  };
 
-   Game.EVENTS = {
-     [scenes.CAVE]: {
-       chests: [{ x: 10, y: 8 }],
-     },
-     [scenes.FIELD]: {
-       ruins: { x: 5, y: 5 },
+  Game.EVENTS = {
+    [scenes.CAVE_B2]: {
+      chests: [{ x: 1, y: 1 }],
+    },
+    [scenes.FIELD]: {
+      ruins: { x: 5, y: 5 },
      },
    };
  })();

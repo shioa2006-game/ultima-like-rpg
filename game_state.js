@@ -10,11 +10,12 @@
      gridHeight: 18,
    });
 
-   const SCENE = Object.freeze({
-     FIELD: "FIELD",
-     VILLAGE: "VILLAGE",
-     CAVE: "CAVE",
-   });
+  const SCENE = Object.freeze({
+    FIELD: "FIELD",
+    VILLAGE: "VILLAGE",
+    CAVE: "CAVE",
+    CAVE_B2: "CAVE_B2",
+  });
 
    const TILE = Object.freeze({
      GRASS: "GRASS",
@@ -59,11 +60,12 @@
      [TILE.WALL]: true,
    });
 
-   const sceneLabels = Object.freeze({
-     [SCENE.FIELD]: "フィールド",
-     [SCENE.VILLAGE]: "村",
-     [SCENE.CAVE]: "洞窟",
-   });
+  const sceneLabels = Object.freeze({
+    [SCENE.FIELD]: "フィールド",
+    [SCENE.VILLAGE]: "村",
+    [SCENE.CAVE]: "洞窟",
+    [SCENE.CAVE_B2]: "洞窟 地下2階",
+  });
 
    const ITEM = Object.freeze({
      FOOD10: "FOOD10",
@@ -460,15 +462,18 @@
      return Game.mapData ? Game.mapData[state.scene] : null;
    }
 
-   function ensureSceneEnemies(scene) {
-     if (!Game.entities) return;
-     if (scene === SCENE.FIELD && typeof Game.entities.ensureFieldEnemies === "function") {
-       Game.entities.ensureFieldEnemies();
-     }
-     if (scene === SCENE.CAVE && typeof Game.entities.ensureCaveEnemies === "function") {
-       Game.entities.ensureCaveEnemies();
-     }
-   }
+  function ensureSceneEnemies(scene) {
+    if (!Game.entities) return;
+    if (scene === SCENE.FIELD && typeof Game.entities.ensureFieldEnemies === "function") {
+      Game.entities.ensureFieldEnemies();
+    }
+    if (
+      (scene === SCENE.CAVE || scene === SCENE.CAVE_B2) &&
+      typeof Game.entities.ensureCaveEnemies === "function"
+    ) {
+      Game.entities.ensureCaveEnemies();
+    }
+  }
 
    function switchScene(nextScene, spawnKey) {
      const map = Game.mapData ? Game.mapData[nextScene] : null;
