@@ -187,11 +187,13 @@
 
    const LV_THRESH = Object.freeze([10, 30, 60, 100, 150, 210, 280, 360, 440]);
 
-   const progressFlags = {
-     hasKey: false,
-     openedChests: new Set(),
-     cleared: false,
-   };
+  const progressFlags = {
+    questTalked: false,
+    questGiven: false,
+    hasKey: false,
+    openedChests: new Set(),
+    cleared: false,
+  };
 
    const battleState = {
      active: false,
@@ -267,11 +269,13 @@
      };
    }
 
-   function resetProgressFlags() {
-     progressFlags.hasKey = false;
-     progressFlags.cleared = false;
-     progressFlags.openedChests.clear();
-   }
+  function resetProgressFlags() {
+    progressFlags.questTalked = false;
+    progressFlags.questGiven = false;
+    progressFlags.hasKey = false;
+    progressFlags.cleared = false;
+    progressFlags.openedChests.clear();
+  }
 
    function makePosKey(scene, x, y) {
      if (Game.utils && typeof Game.utils.makePosKey === "function") {
@@ -486,18 +490,20 @@
     }
   }
 
-   function switchScene(nextScene, spawnKey) {
-     const map = Game.mapData ? Game.mapData[nextScene] : null;
-     if (!map) return;
-     const spawn = (map.spawnPoints && map.spawnPoints[spawnKey]) || map.spawnPoints.default;
-     setPlayerPosition(spawn);
-     state.scene = nextScene;
-     state.walkCounter = 0;
-     pushMessage(`${sceneLabels[nextScene]}へ移動した。`);
-     ensureSceneEnemies(nextScene);
-     markOccupancyDirty();
-     ensureOccupancy();
-   }
+  function switchScene(nextScene, spawnKey) {
+    const prevScene = state.scene;
+    const map = Game.mapData ? Game.mapData[nextScene] : null;
+    if (!map) return;
+    const spawn = (map.spawnPoints && map.spawnPoints[spawnKey]) || map.spawnPoints.default;
+    setPlayerPosition(spawn);
+    state.scene = nextScene;
+    state.walkCounter = 0;
+    pushMessage(`${sceneLabels[nextScene]}へ移動した。`);
+    ensureSceneEnemies(nextScene);
+    markOccupancyDirty();
+    ensureOccupancy();
+    handleQuestProgressOnSceneChange(prevScene, nextScene);
+  }
 
    function initializeGame() {
      resetForNewGame();
@@ -574,14 +580,26 @@
      return !!uiState.overlay;
    }
 
-   function isInsideGrid(pos) {
-     return (
-       pos.x >= 0 &&
-       pos.y >= 0 &&
-       pos.x < config.gridWidth &&
-       pos.y < config.gridHeight
-     );
-   }
+  function isInsideGrid(pos) {
+    return (
+      pos.x >= 0 &&
+      pos.y >= 0 &&
+      pos.x < config.gridWidth &&
+      pos.y < config.gridHeight
+    );
+  }
+
+  function handleQuestProgressOnSceneChange(prevScene, nextScene) {
+    if (
+      prevScene === SCENE.TOWN &&
+      nextScene !== SCENE.TOWN &&
+      progressFlags.questTalked &&
+      !progressFlags.questGiven
+    ) {
+      progressFlags.questGiven = true;
+      pushMessage("王様の頼みを胸に街をあとにした。");
+    }
+  }
 
    function isFreeForPlayer(x, y) {
      ensureOccupancy();
@@ -1059,4 +1077,3 @@
      resolveTileEvent,
    };
  })();
-

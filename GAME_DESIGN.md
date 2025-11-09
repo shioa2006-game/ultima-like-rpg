@@ -1,64 +1,54 @@
-# NPC対話システム 設計書
+﻿# NPC対話システム 設計書
 
 ## 1. システム概要
-NPCとの対話をストーリー進行段階に応じて動的に変更するシステム。セリフデータをJSON外部化することで、プログラムコードとコンテンツを分離し、保守性と拡張性を確保する。
+p5.js を用いたブラウザRPGで、NPCとの会話内容をゲーム進行に応じて動的に切り替える。セリフは `assets/dialogues.json` に外部化し、ロジックは `dialogue.js` モジュールに集約することで、実装とコンテンツを明確に分離する。
 
-**設計方針**:
-- **データ駆動型**: セリフデータは `assets/dialogues.json` で管理
-- **ロジック分離**: 対話ロジックは `dialogue.js` モジュールで実装
-- **段階管理**: ゲーム進行を明確な段階 (STORY_PHASE) で区分
-- **フォールバック機能**: データロード失敗時やセリフ未定義時の対応
+- **データ管理**: すべての台詞は JSON に保存し、バージョン管理で差分を追跡。
+- **ロジック分離**: 会話制御は `dialogue.js`、入力検出は `input.js`、UI描画は `renderer.js` が担当。
+- **フェーズ制御**: STORY_PHASE で進行度を明示化し、フラグ値に応じて適切な台詞を選択。
+- **フォールバック**: セリフが存在しない場合は前フェーズの内容で補完し、空欄を防止。
 
-## 2. キャラクタータイプの分類
+## 2. キャラクタータイプ
+### 機能NPC (Functional NPCs)
+定型機能を持つNPC。セリフは基本的に固定。
+- **商人 (Merchant)**: アイテム売買。`shop.js`
+- **宿屋 (Innkeeper)**: HP回復。`inn.js`
+- 追加予定: 鍛冶屋、船頭、掲示板など
 
-### 機能的キャラクター (Functional NPCs)
-定型的な機能を提供するNPC。セリフは固定。
-- **商人** (Merchant): アイテム売買UI提供 → `shop.js`
-- **宿屋主人** (Innkeeper): HP回復サービス → `inn.js`
-- (将来: 鍛冶屋、銀行、クエスト掲示板など)
+### ストーリーNPC (Story NPCs)
+進行度に応じて台詞が変化。`dialogue.js` で管理。
+- **王様 (King)**: メインクエストの案内役
+- 今後: 大臣、兵士、村人 など
 
-### ストーリーキャラクター (Story NPCs)
-ストーリー進行に応じてセリフが変化するNPC。`dialogue.js` で管理。
-- **王様** (King): メインストーリーの進行役
-- (将来: 大臣、兵士、村人、冒険者など)
+## 3. STORY_PHASE とフラグ
 
-## 3. ストーリー進行段階 (STORY_PHASE)
-
-ゲームの進行状態を以下の3段階で管理：
-
-| フェーズID | 名称 | 条件 | 説明 |
+| フェーズID | 名称 | 条件 | 目的 |
 |-----------|------|------|------|
-| 0 | START | ゲーム開始時・初回会話前 | クエスト説明、世界観導入 |
-| 1 | QUEST_GIVEN | `progressFlags.questGiven === true` | クエスト受領後、鍵未入手時 |
+| 0 | START | 初期状態 | 世界観説明、クエスト依頼 |
+| 1 | QUEST_GIVEN | `progressFlags.questGiven === true` | クエスト受領後、鍵未入手 |
 | 2 | KEY_OBTAINED | `progressFlags.hasKey === true` | Ancient Key 入手後 |
 
-**判定ロジック** (`dialogue.js::getCurrentPhase()`):
+**判定ロジック (`dialogue.js::getCurrentPhase`)**
 ```javascript
-if (state.progressFlags.hasKey) return STORY_PHASE.KEY_OBTAINED;
-if (state.progressFlags.questGiven) return STORY_PHASE.QUEST_GIVEN;
+if (progressFlags.hasKey) return STORY_PHASE.KEY_OBTAINED;
+if (progressFlags.questGiven) return STORY_PHASE.QUEST_GIVEN;
 return STORY_PHASE.START;
 ```
 
-**フラグ管理の追加**:
-- 初回会話後に `Game.state.progressFlags.questGiven = true` を設定
-- これにより2回目以降の会話で異なるセリフを表示
+**フラグ管理**
+- 初回会話を最後まで読むと `progressFlags.questTalked = true` をセット（依頼内容を聞いた状態）。
+- プレイヤーが TOWN を離れて他シーンへ移動した瞬間、`questTalked && !questGiven` を確認し `questGiven = true` を自動設定。これにより王様の周囲で T キーを連打してもフェーズ0のまま留まり、街の外へ出た段階で `dialogues1` に遷移する。
+- 以降は `hasKey` や `cleared` など既存フラグで追加フェーズを制御。
 
-**注記**:
-- ゲームクリア（遺跡到達）後は王様に戻る機会がないため、クリア後のセリフは不要
-- 将来的にエンディング後の自由探索を追加する場合は、フェーズ3以降を拡張可能
-
-## 4. JSONスキーマ設計
-
-### ファイル構成
+## 4. JSONスキーマ
 ```
 assets/
-├─ dialogues.json    // 会話データ（日本語）
-├─ actors.png        // 既存
-├─ enemies.png       // 既存
+├─ dialogues.json  // 会話データ (UTF-8)
+├─ actors.png
+├─ enemies.png
 └─ ...
 ```
 
-### スキーマ構造 (`assets/dialogues.json`)
 ```json
 {
   "version": "1.0.0",
@@ -68,10 +58,10 @@ assets/
     "KEY_OBTAINED": 2
   },
   "characters": {
-    "<キャラクターID>": {
+    "<characterId>": {
       "name": "<表示名>",
       "dialogues": {
-        "<フェーズID(数値文字列)>": [
+        "<phaseId>": [
           "<セリフ1>",
           "<セリフ2>",
           "..."
@@ -82,205 +72,102 @@ assets/
 }
 ```
 
-**フィールド仕様**:
-- `version`: スキーマバージョン（将来の互換性管理用）
-- `storyPhases`: フェーズ定義（定数マッピング）
-- `characters`: キャラクターごとのデータ
-  - `name`: UI表示用の名前
-  - `dialogues`: フェーズIDをキーとしたセリフ配列
-    - キーは文字列型（JSONの制約）
-    - 値は文字列配列（複数行のセリフを順次表示）
+- `dialogues` のキーは数値文字列。未定義フェーズは自動的に以前のフェーズへフォールバック。
+- 1行50文字以内を推奨。表示枠を超える場合でも自動折り返しされるが、可読性確保のため `[⏎]` などの制御表記でプレイヤー入力タイミングを示すと親切。
 
-## 5. 王様のセリフ実装内容
-
-TOWN `{x:18, y:2}` に配置されている王様のセリフ定義：
+## 5. 王様のセリフ例
+TOWN `{x:18, y:2}` に配置。`assets/dialogues.json` へ以下のように記述。
 
 ```json
-{
-  "king": {
-    "name": "王様",
-    "dialogues": {
-      "0": [
-        "王様: よく来た、若き冒険者よ。",
-        "王様: 最近、東の遺跡に古代のドラゴンが現れたという報告がある。",
-        "王様: 遺跡の扉は固く閉ざされているが、Ancient Key があれば開けられるはずだ。",
-        "王様: この鍵は洞窟の奥深くに眠っていると言い伝えられている。探してきてくれないか？"
-      ],
-      "1": [
-        "王様: Ancient Key はまだ見つからないか。",
-        "王様: 洞窟は危険だが、そなたなら必ず見つけ出せるはずだ。",
-        "王様: 宝箱の中に眠っているという噂もある。諦めずに探すのだ。"
-      ],
-      "2": [
-        "王様: おお、Ancient Key を手に入れたか！",
-        "王様: さすがだ。これで遺跡の扉を開けることができる。",
-        "王様: だが、中には強大なドラゴンが待ち受けているだろう。",
-        "王様: 十分に準備を整えてから向かうのだ。武器と防具を整え、体力を万全にしておけ。"
-      ]
-    }
+"king": {
+  "name": "王様",
+  "dialogues": {
+    "0": [
+      "王様 よく来た、若き冒険者よ。[⏎]",
+      "王様 最近、東の遺跡に古代のドラゴンが現れたとの報告がある。[⏎]",
+      "王様 遺跡の扉は固く閉ざされておるが、Ancient Key があれば開けられるはずだ。[⏎]",
+      "王様 その鍵は洞窟の奥深くに眠っていると言われておる。探してきてくれぬか。[⏎]"
+    ],
+    "1": [
+      "王様 Ancient Key はまだ見つからぬか。[⏎]",
+      "王様 洞窟は危険だが、そなたなら必ず探し出せるはずだ。[⏎]",
+      "王様 宝箱の中に眠っているという噂もある。諦めずに探すのだ。[⏎]"
+    ],
+    "2": [
+      "王様 おお、Ancient Key を手に入れたか！[⏎]",
+      "王様 さすがだ。これで遺跡の扉を開けられる。[⏎]",
+      "王様 中には強大なドラゴンが待つだろう。十分に備えて向かうのだ。[⏎]"
+    ]
   }
 }
 ```
 
-**セリフ設計のポイント**:
-- **フェーズ0（初回訪問時）**: クエストの背景説明とゲーム目標の明示
-  - ドラゴンの出現を報告
-  - Ancient Keyが必要であることを伝える
-  - 洞窟に鍵があることを示唆
-- **フェーズ1（2回目以降、鍵未入手時）**: 進捗確認と励まし
-  - プレイヤーの進捗を確認
-  - 具体的なヒント（宝箱）を提供
-  - 諦めずに探すよう励ます
-- **フェーズ2（鍵入手後）**: 次の目標の提示と警告
-  - 鍵入手を祝福
-  - 遺跡への道が開けたことを伝える
-  - ドラゴン戦への準備を促す（最終ミッション）
+- `[⏎]` は任意。入力タイミングのヒントとして使用。
+- JSON 追加時は構文チェックとテキスト幅の確認を行う。
 
-## 6. dialogue.js モジュール仕様
+## 6. `dialogue.js` モジュール仕様
 
-### 責務
-- JSONデータのロード・管理
-- 現在のストーリー段階判定
-- キャラクターとの対話実行
-- フォールバック処理（データ不備時）
-
-### 公開API
-```javascript
-Game.dialogue = {
-  // JSONロード（preload()から呼び出し）
-  loadDialogues(p5Instance): Promise<Object>
-
-  // キャラクターとの会話実行
-  talk(characterId: string): void
-
-  // 現在のストーリー段階取得
-  getCurrentPhase(): number
-
-  // データロード状態確認
-  isReady(): boolean
-
-  // デバッグ用：キャラクターリスト取得
-  getCharacterList(): string[]
-
-  // フェーズ定数（読み取り専用）
-  STORY_PHASE: Object
+```ts
+interface DialogueModule {
+  loadDialogues(p5Instance: p5): Promise<void>;
+  talk(characterId: string): void;
+  getCurrentPhase(): number;
+  isLoaded(): boolean;
+  isSessionActive(): boolean;
+  STORY_PHASE: Readonly<Record<string, number>>;
 }
 ```
 
-### 主要メソッド詳細
+### `loadDialogues`
+- `p5.loadJSON()` もしくは `fetch` を利用して `assets/dialogues.json` をロード。
+- 成功: データを内部状態に保持し、以後の呼び出しで即参照。
+- 失敗: フォールバックデータ（簡易メッセージ）を生成し、警告を出力。
 
-**`loadDialogues(p5Instance)`**
-- p5.jsの`loadJSON()`を使用してassets/dialogues.jsonをロード
-- 成功時: `dialogueData`に格納、`STORY_PHASE`を初期化
-- 失敗時: フォールバックデータ（最小限のセリフ）を生成
-- Promiseで完了を通知
+### `talk(characterId)`
+- 現在フェーズを取得し、該当セリフ配列を検索。
+- セリフは内部キューへ積まれ、`T` キーを押すたびに 1 行ずつ `Game.pushMessage()` へ送る。これによりメッセージ欄の 4 行制限に左右されない。
+- セリフ未定義時は前フェーズを参照（フォールバック）。
+- 会話が最後まで進んだ時に王様×フェーズ0であれば `progressFlags.questTalked = true` を更新。実際のフェーズ遷移はシーン移動時の判定に委ねる。
+- 該当キャラクターが存在しない場合は「特に反応がない。」を表示。
 
-**`talk(characterId)`**
-- 現在のフェーズを取得 (`getCurrentPhase()`)
-- JSONから該当キャラクター・該当フェーズのセリフを検索
-- セリフが存在する場合: すべてのセリフを`Game.pushMessage()`で表示
-- セリフが未定義の場合: 前のフェーズのセリフを検索 (フォールバック)
-- キャラクター自体が存在しない場合: "特に反応がない。"
+### `getCurrentPhase`
+- `progressFlags` を参照し、最大優先度のフェーズを返す (`hasKey > questGiven > start`)。
 
-**`getCurrentPhase()`**
-- `Game.state.progressFlags`と`Game.state.flags`を評価
-- 最も進んだフェーズIDを返す（優先順位: CLEARED > DRAGON_DEFEATED > KEY_OBTAINED > START）
-
-## 7. input.js への統合
-
-`handleTalk()` 関数に王様の対話処理を追加：
-
-```javascript
-// 既存の商人・宿屋チェックの後に追加
-if (Game.utils.isAdjacent(pos, Game.state.king.pos) &&
-    Game.state.scene === Game.state.king.scene) {
-  Game.dialogue.talk('king');
-  return;
-}
-```
-
-**統合のポイント**:
-- 隣接判定は既存の`Game.utils.isAdjacent()`を使用
-- シーン一致チェックで別マップの誤作動を防止
-- 機能的キャラクター（商人・宿屋）が優先処理される順序を維持
+## 7. `input.js` との連携
+`handleTalk()` で王様に隣接しているかつ同一シーンであれば `Game.dialogue.talk('king')` を呼び出す。商人や宿屋など機能NPCの判定より後に配置し、キング会話は逐次表示で進行する。セッション中に再度 `T` キーを押すと次の行へ進む仕様のため、追加の入力分岐は不要。
 
 ## 8. 実装ファイル構成
-
 ```
 ultima-like-rpg/
-├─ index.html          // <script src="dialogue.js"></script> を追加
-├─ dialogue.js         // 🆕 新規作成
+├─ index.html            // <script src="dialogue.js"> を input.js より前に読み込む
+├─ dialogue.js           // 会話制御ロジック
 ├─ assets/
-│  └─ dialogues.json  // 🆕 新規作成
-├─ game_state.js       // 既存（王様の位置定義済み）
-├─ input.js            // 修正（handleTalk()に王様処理追加）
-└─ sketch.js           // 修正（preload()でJSONロード）
+│  └─ dialogues.json     // セリフデータ
+├─ game_state.js         // 王様座標・進行フラグ管理
+├─ input.js              // Tキー処理
+├─ renderer.js           // メッセージ描画（p.textWrapで折り返し）
+└─ ...
 ```
 
-## 9. 実装手順
+## 9. 実装・テスト手順
+1. `dialogues.json` を編集し、新規セリフを追加。UTF-8 / JSON バリデーション必須。
+2. `dialogue.js` を修正（フェーズ追加やセッション挙動など）。
+3. `index.html` で読み込み順を確認後、`sketch.js::preload` で `Game.dialogue.loadDialogues(this)` を呼び出しておく。
+4. `input.js` で T キー判定が正しく `Game.dialogue.talk` に流れることを確認。
+5. `game_state.js` の `switchScene` で `questTalked` → `questGiven` への昇格をテスト（TOWN→FIELD に移動する）。
+6. ローカルサーバー (`python -m http.server`) で起動し、各フェーズを手動確認。必要に応じて `Game.flags` をコンソールから書き換えテスト。
 
-1. **`assets/dialogues.json` 作成**
-   - 王様のセリフデータを実装
-   - JSONバリデーターで構文チェック
+## 10. 拡張アイデア
+- サブキャラクターの追加とフェーズ3以降（ドラゴン討伐後など）のセリフ拡張。
+- 選択肢や分岐会話、好感度によるセリフ変化。
+- 多言語対応 (`dialogues_en.json` など)。
+- セリフスキップ・早送り機能、ボイス再生などの演出強化。
 
-2. **`dialogue.js` モジュール作成**
-   - JSONロード処理実装
-   - `talk()`, `getCurrentPhase()` 実装
-   - フォールバック機能実装
+## 11. 運用上の注意
+- JSON は UTF-8 (BOMなし) で保存し、PR 時に差分が読みやすいよう整形を揃える。
+- 1行あたり 50 文字前後を目安にし、必要に応じて `[⏎]` や句読点で区切る。
+- セッション状態をリセットする操作（シーン切り替えや戦闘など）が増える場合は `dialogue.js` の `resetSession` を必ず呼び出す。
+- メッセージログは 4 行まで描画されるため、長文イベントでは逐次表示前提で台詞を設計する。
 
-3. **`index.html` 修正**
-   - `<script src="dialogue.js"></script>` を `input.js` の前に追加
 
-4. **`sketch.js` 修正**
-   - `preload()` 内で `Game.dialogue.loadDialogues(window)` を呼び出し
-   - ロード完了確認ログ追加
 
-5. **`input.js` 修正**
-   - `handleTalk()` に王様判定処理を追加
-
-6. **動作確認**
-   - 各ストーリー段階でのセリフ変化をテスト
-   - フラグを手動変更して全フェーズを確認
-   - JSONロード失敗時のフォールバック動作確認
-
-7. **ローカルサーバー起動**
-   ```bash
-   python -m http.server 8000
-   # http://localhost:8000 でアクセス
-   ```
-
-## 10. 将来の拡張可能性
-
-### 短期的な拡張
-- 大臣、兵士、村人などのストーリーキャラクター追加
-- ランダムセリフ（配列から1つを選択）
-- エンディング後の自由探索モード追加（フェーズ3以降の実装）
-
-### 中期的な拡張
-- 選択肢システム（Yes/No、複数選択）
-- 条件付きセリフ（アイテム所持、レベル、Gold等）
-- サブクエストフラグの追加
-
-### 長期的な拡張
-- 多言語対応 (`dialogues_en.json`, `dialogues_zh.json`)
-- セリフのスキップ/早送り機能
-- キャラクター表情・ポーズ変化
-- ボイス再生対応（音声ファイルへのパス指定）
-
-## 11. 注意事項とベストプラクティス
-
-### セリフ記述ガイドライン
-- 1行は50文字以内を推奨（メッセージパネルの幅制約）
-- キャラクター名を接頭辞として明示 (`"王様: "`)
-- 重要な情報は複数行に分割して強調
-- プレイヤーの次の目標を明確に示す
-
-### データ管理
-- JSONファイルはUTF-8エンコーディングで保存
-- バージョン管理でテキスト差分を追跡しやすくする
-- 大規模化時は `assets/dialogues/` ディレクトリに分割も検討
-
-### パフォーマンス
-- JSONは`preload()`で一括ロード（遅延ロード不要）
-- データサイズが大きくなる場合は圧縮版JSONも検討
-- 現在の規模（数百行程度）では問題なし

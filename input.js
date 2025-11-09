@@ -39,16 +39,16 @@
        return;
      }
 
-     const upper = (keyValue || "").toUpperCase();
-     switch (upper) {
-       case "T":
-         handleTalk();
-         return;
-       case "I":
-         toggleInventoryOverlay();
-         return;
-       case "U":
-         Game.pushMessage("所持品を開いてから使用しよう。");
+    const upper = (keyValue || "").toUpperCase();
+    switch (upper) {
+      case "T":
+        handleTalk();
+        return;
+      case "I":
+        toggleInventoryOverlay();
+        return;
+      case "U":
+        Game.pushMessage("所持品を開いてから使用しよう。");
          return;
        case "S":
          toggleStatusOverlay();
@@ -57,12 +57,10 @@
          break;
      }
 
-     if (keyCode === window.ESCAPE) {
-       Game.pushMessage("閉じる対象がない。");
-     } else if (keyCode === window.ENTER) {
-       Game.pushMessage("特に何も起こらない。");
-     }
-   }
+    if (keyCode === window.ESCAPE) {
+      Game.pushMessage("閉じる対象がない。");
+    }
+  }
 
    function handleBattleInput(keyValue, keyCode) {
      const upper = (keyValue || "").toUpperCase();
@@ -150,12 +148,12 @@
      }
    }
 
-   function handleTalk() {
-     const pos = Game.state.playerPos;
-     if (!isAdjacentToNpc(pos)) {
-       Game.pushMessage("近くに話しかけられる相手がいない。");
-       return;
-     }
+  function handleTalk() {
+    const pos = Game.state.playerPos;
+    if (!isAdjacentToNpc(pos)) {
+      Game.pushMessage("近くに話しかけられる相手がいない。");
+      return;
+    }
      if (
        Game.utils.isAdjacent(pos, Game.state.merchant.pos) &&
        Game.state.scene === Game.state.merchant.scene
@@ -170,8 +168,18 @@
        Game.inn.tryOpen();
        return;
      }
-     Game.pushMessage("特に反応がない。");
-   }
+     if (
+       Game.state.king &&
+       Game.utils.isAdjacent(pos, Game.state.king.pos) &&
+       Game.state.scene === Game.state.king.scene &&
+       Game.dialogue &&
+       typeof Game.dialogue.talk === "function"
+     ) {
+       Game.dialogue.talk("king");
+       return;
+    }
+    Game.pushMessage("特に反応がない。");
+  }
 
    function useSelectedInventoryItem() {
      const inventory = Game.state.player.inventory;
@@ -324,7 +332,7 @@
      }
    }
 
-   function handleKeyReleased(keyCode) {
+  function handleKeyReleased(keyCode) {
      // 矢印キーが離されたときの処理
      if (!isArrowKey(keyCode)) return;
 
@@ -341,26 +349,26 @@
      }
    }
 
-   function update() {
-     // 連続移動処理（毎フレーム呼ばれる）
-     if (!keyState.lastPressed) return;
-     if (Game.combat.isActive()) return;
-     if (Game.ui.state.overlay) return;
-
-     // タイマーをインクリメント
-     keyState.moveTimer++;
-
-     // 指定間隔に達したら移動
-     if (keyState.moveTimer >= keyState.moveInterval) {
-       const delta = arrowToDelta(keyState.lastPressed);
-       tryMove(delta.x, delta.y);
-       keyState.moveTimer = 0;
-     }
-   }
-
-   Game.input = {
-     handleKeyPressed,
-     handleKeyReleased,
-     update,
-   };
- })();
+  function update() {
+    // 連続移動処理。毎フレーム呼ばれる。
+    if (!keyState.lastPressed) return;
+    if (Game.combat.isActive()) return;
+    if (Game.ui.state.overlay) return;
+
+    // タイマーをインクリメント
+    keyState.moveTimer++;
+
+    // 所定間隔に達したら移動
+    if (keyState.moveTimer >= keyState.moveInterval) {
+      const delta = arrowToDelta(keyState.lastPressed);
+      tryMove(delta.x, delta.y);
+      keyState.moveTimer = 0;
+    }
+  }
+
+  Game.input = {
+    handleKeyPressed,
+    handleKeyReleased,
+    update,
+  };
+})();

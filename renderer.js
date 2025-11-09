@@ -202,12 +202,14 @@
     const messages = Game.state.messages.slice(-4);
     const lineHeight = 24;
     const iconSize = 20;
-    messages.forEach((entryRaw, index) => {
+    let cursorY = y + 12;
+    p.textWrap(p.CHAR);
+    messages.forEach((entryRaw) => {
       const entry =
         typeof entryRaw === "string" || entryRaw == null
           ? { text: entryRaw || "" }
           : entryRaw;
-      const lineY = y + 12 + index * lineHeight;
+      const lineY = cursorY;
       let textX = x + 12;
       if (
         entry.icon &&
@@ -240,11 +242,14 @@
         textX += p.textWidth(label) + 6;
       }
       const text = entry.text != null ? String(entry.text) : "";
-      p.text(text, textX, lineY);
+      const availableWidth = Math.max(10, layout.panelWidth - (textX - x) - 12);
+      const lineCount = estimateWrappedLineCount(p, text, availableWidth);
+      p.text(text, textX, lineY, availableWidth);
+      cursorY += Math.max(1, lineCount) * lineHeight;
     });
   }
 
-   function drawStatusPanel(p) {
+  function drawStatusPanel(p) {
      const x = 0;
      const y = layout.mapAreaHeight;
      const player = Game.state.player;
@@ -466,6 +471,30 @@
     );
     p.fill(255);
   }
+
+  function estimateWrappedLineCount(p, text, maxWidth) {
+    // p5.jsの textWrap(CHR) に合わせて文字単位で行数を推定
+    const source = (text != null ? String(text) : "").split(/\r?\n/);
+    const lines = [];
+    for (const segment of source) {
+      let current = "";
+      if (segment.length === 0) {
+        lines.push("");
+        continue;
+      }
+      for (const char of segment) {
+        const next = current + char;
+        if (current.length === 0 || p.textWidth(next) <= maxWidth) {
+          current = next;
+          continue;
+        }
+        lines.push(current);
+        current = char.trim().length === 0 ? "" : char;
+      }
+      lines.push(current);
+    }
+    return Math.max(1, lines.filter((line) => line.length > 0).length || source.length);
+  }
   function drawClearOverlay(p = window) {
      if (!Game.flags || !Game.flags.cleared) return;
      p.push();
@@ -511,8 +540,6 @@
      drawClearOverlay,
    };
  })();
-
-
 
 
 

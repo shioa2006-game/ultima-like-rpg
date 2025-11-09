@@ -1,12 +1,20 @@
 // p5.js のエントリポイント
 function preload() {
-  // スプライトシートの読み込み
+  // スプライトシートを読み込み
   if (!window.Game) window.Game = {};
   if (!window.Game.assets) window.Game.assets = {};
-  window.Game.assets.tilesSheet = loadImage('assets/tiles.png');
-  window.Game.assets.actorsSheet = loadImage('assets/actors.png');
-  window.Game.assets.enemiesSheet = loadImage('assets/enemies.png');
-  window.Game.assets.objectsSheet = loadImage('assets/objects_interactable.png');
+  window.Game.assets.tilesSheet = loadImage("assets/tiles.png");
+  window.Game.assets.actorsSheet = loadImage("assets/actors.png");
+  window.Game.assets.enemiesSheet = loadImage("assets/enemies.png");
+  window.Game.assets.objectsSheet = loadImage("assets/objects_interactable.png");
+
+  // NPC対話データも事前に読み込む
+  if (window.Game.dialogue && typeof window.Game.dialogue.loadDialogues === "function") {
+    window.Game.dialogue.loadDialogues(this);
+    console.log("dialogues.json を読み込みました");
+  } else {
+    console.warn("Game.dialogue が未定義のため対話データを読み込めませんでした");
+  }
 }
 
 function setup() {
@@ -28,7 +36,7 @@ function draw() {
   Game.renderer.drawBattleOverlay();
   Game.renderer.drawClearOverlay();
 
-  // 連続移動処理
+  // 連続移動を処理
   Game.input.update();
 }
 
