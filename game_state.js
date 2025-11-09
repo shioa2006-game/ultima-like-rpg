@@ -219,6 +219,10 @@
        scene: SCENE.VILLAGE,
        pos: { x: 9, y: 5 },
      },
+     king: {
+       scene: SCENE.VILLAGE,
+       pos: { x: 18, y: 2 },
+     },
      flags: {
        starvingNotified: false,
        dragonDefeated: false,
@@ -394,6 +398,13 @@
 
      if (state.innkeeper.scene === state.scene) {
        occupyCell(state.innkeeper.pos.x, state.innkeeper.pos.y, {
+         layer: LAYER.NPC,
+         npc: true,
+       });
+     }
+
+     if (state.king && state.king.scene === state.scene) {
+       occupyCell(state.king.pos.x, state.king.pos.y, {
          layer: LAYER.NPC,
          npc: true,
        });
@@ -644,6 +655,9 @@
        return false;
      }
      if (state.innkeeper.scene === scene && state.innkeeper.pos.x === x && state.innkeeper.pos.y === y) {
+       return false;
+     }
+     if (state.king && state.king.scene === scene && state.king.pos.x === x && state.king.pos.y === y) {
        return false;
      }
      if (scene === state.scene && state.playerPos.x === x && state.playerPos.y === y) {
