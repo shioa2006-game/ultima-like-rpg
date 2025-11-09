@@ -37,7 +37,7 @@
      [Game.TILE.TREE]: 7,
      [Game.TILE.WALL]: 8,
      [Game.TILE.DOOR]: 9,
-     [Game.TILE.ENTRANCE_VIL]: 10,
+     [Game.TILE.ENTRANCE_TOWN]: 10,
      [Game.TILE.ENTRANCE_CAVE]: 11,
      [Game.TILE.STAIRS_UP]: 12,
      [Game.TILE.STAIRS_DOWN]: 13,

@@ -12,7 +12,7 @@
 
   const SCENE = Object.freeze({
     FIELD: "FIELD",
-    VILLAGE: "VILLAGE",
+    TOWN: "TOWN",
     CAVE: "CAVE",
     CAVE_B2: "CAVE_B2",
   });
@@ -28,7 +28,7 @@
      TREE: "TREE",
      WALL: "WALL",
      DOOR: "DOOR",
-     ENTRANCE_VIL: "ENTRANCE_VIL",
+     ENTRANCE_TOWN: "ENTRANCE_TOWN",
      ENTRANCE_CAVE: "ENTRANCE_CAVE",
      STAIRS_UP: "STAIRS_UP",
      STAIRS_DOWN: "STAIRS_DOWN",
@@ -46,7 +46,7 @@
      [TILE.TREE]: "#5DA147",
      [TILE.WALL]: "#703737",
      [TILE.DOOR]: "#B57A43",
-     [TILE.ENTRANCE_VIL]: "#7CCB5B",
+     [TILE.ENTRANCE_TOWN]: "#7CCB5B",
      [TILE.ENTRANCE_CAVE]: "#444444",
      [TILE.STAIRS_UP]: "#444444",
      [TILE.STAIRS_DOWN]: "#444444",
@@ -62,7 +62,7 @@
 
   const sceneLabels = Object.freeze({
     [SCENE.FIELD]: "フィールド",
-    [SCENE.VILLAGE]: "村",
+    [SCENE.TOWN]: "街",
     [SCENE.CAVE]: "洞窟",
     [SCENE.CAVE_B2]: "洞窟 地下2階",
   });
@@ -116,7 +116,7 @@
 
    const RESERVED_TILES = new Set([
      TILE.DOOR,
-     TILE.ENTRANCE_VIL,
+     TILE.ENTRANCE_TOWN,
      TILE.ENTRANCE_CAVE,
      TILE.STAIRS_UP,
      TILE.STAIRS_DOWN,
@@ -212,15 +212,15 @@
      messages: [],
      player: createDefaultPlayer(),
      merchant: {
-       scene: SCENE.VILLAGE,
+       scene: SCENE.TOWN,
        pos: { x: 13, y: 11 },
      },
      innkeeper: {
-       scene: SCENE.VILLAGE,
+       scene: SCENE.TOWN,
        pos: { x: 9, y: 5 },
      },
      king: {
-       scene: SCENE.VILLAGE,
+       scene: SCENE.TOWN,
        pos: { x: 18, y: 2 },
      },
      flags: {
