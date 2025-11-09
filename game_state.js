@@ -952,7 +952,6 @@
        state.player.maxHp += 5;
        state.player.atk += 1;
        state.player.def += 1;
-       state.player.hp = Math.min(state.player.maxHp, state.player.hp + 5);
        leveled = true;
        pushMessage(`レベル ${state.player.lv} に上がった！`);
      }
