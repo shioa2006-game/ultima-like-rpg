@@ -6,12 +6,14 @@
     PLAYER: "PLAYER",
     MERCHANT: "MERCHANT",
     INNKEEPER: "INNKEEPER",
+    KING: "KING",
   });
 
   const ACTOR_SPRITE = Object.freeze({
     [ACTOR_KIND.PLAYER]: 0,
     [ACTOR_KIND.MERCHANT]: 1,
     [ACTOR_KIND.INNKEEPER]: 2,
+    [ACTOR_KIND.KING]: 3,
   });
 
   const ACTOR_SPRITE_SIZE = 48;
@@ -346,6 +348,8 @@
     if (merchant.scene === scene && merchant.pos.x === x && merchant.pos.y === y) return true;
     const innkeeper = Game.state.innkeeper;
     if (innkeeper.scene === scene && innkeeper.pos.x === x && innkeeper.pos.y === y) return true;
+    const king = Game.state.king;
+    if (king && king.scene === scene && king.pos.x === x && king.pos.y === y) return true;
     return Game.state.enemies.some(
       (enemy) => enemy.scene === scene && enemy.pos.x === x && enemy.pos.y === y
     );

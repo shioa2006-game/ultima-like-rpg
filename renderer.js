@@ -144,6 +144,9 @@
     if (state.scene === state.innkeeper.scene) {
       drawActorOrFallback(Game.entities.ACTOR_KIND.INNKEEPER, state.innkeeper.pos);
     }
+    if (state.king && state.scene === state.king.scene) {
+      drawActorOrFallback(Game.entities.ACTOR_KIND.KING, state.king.pos);
+    }
      p.pop();
    }
 
