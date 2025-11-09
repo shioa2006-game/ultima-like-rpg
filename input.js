@@ -57,6 +57,12 @@
          break;
      }
 
+    // Enterキー：セリフ送り
+    if (keyCode === window.ENTER) {
+      handleAdvanceDialogue();
+      return;
+    }
+
     if (keyCode === window.ESCAPE) {
       Game.pushMessage("閉じる対象がない。");
     }
@@ -179,6 +185,12 @@
        return;
     }
     Game.pushMessage("特に反応がない。");
+  }
+
+  function handleAdvanceDialogue() {
+    if (Game.dialogue && typeof Game.dialogue.advance === "function") {
+      Game.dialogue.advance();
+    }
   }
 
    function useSelectedInventoryItem() {
