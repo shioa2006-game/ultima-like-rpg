@@ -113,10 +113,9 @@
 
    function handleVictory() {
      const enemy = Game.battle.enemy;
-     Game.state.player.hp = Math.min(Game.state.player.maxHp, Game.state.player.hp + 3);
      Game.state.player.gold += enemy.gold;
      Game.grantExp(enemy.exp);
-     Game.pushMessage(`勝利！ EXP +${enemy.exp} / Gold +${enemy.gold} / HP +3`);
+     Game.pushMessage(`勝利！ EXP +${enemy.exp} / Gold +${enemy.gold}`);
      Game.entities.removeEnemyById(enemy.instanceId);
      endBattle();
    }
