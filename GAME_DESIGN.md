@@ -11,12 +11,12 @@ Version: 0.3 / Target: Browser / Engine: p5.js / Canvas: 800x600 / Grid: 24x18 (
 ## 1. シーンとマップ
 | Scene  | 目的                         | サイズ | 主なタイル種別                                               | 備考 |
 |--------|------------------------------|--------|--------------------------------------------------------------|------|
-| FIELD  | フィールド (屋外)            | 24x18 | GRASS, ROAD, WATER, MOUNTAIN, ROCK, TREE, RUINS, ENTRANCE_* | 村/洞窟入口、Ancient Key イベント、敵スポーン 3～5 体 |
-| VILLAGE| 村 (補給拠点)                | 24x18 | WALL, FLOOR_BUILD, ROAD, TREE, DOOR                         | 商人と宿屋が常駐。村内で敵は出現しない |
+| FIELD  | フィールド (屋外)            | 24x18 | GRASS, ROAD, WATER, MOUNTAIN, ROCK, TREE, RUINS, ENTRANCE_* | 街/洞窟入口、Ancient Key イベント、敵スポーン 3～5 体 |
+| TOWN   | 街 (補給拠点)                | 24x18 | WALL, FLOOR_BUILD, ROAD, TREE, DOOR                         | 商人と宿屋が常駐。街内で敵は出現しない |
 | CAVE   | 洞窟                         | 24x18 | FLOOR_CAVE, ROCK, STAIRS_UP, ENTRANCE_CAVE                  | 宝箱イベントと敵スポーン 2～4 体 |
 
 ### シーン遷移
-- FIELD ↔ VILLAGE: `ENTRANCE_VIL` / 村のドアを介して相互遷移。村からは南北 2 箇所の出口を用意。
+- FIELD ↔ TOWN: `ENTRANCE_TOWN` / 街のドアを介して相互遷移。街からは南北 2 箇所の出口を用意。
 - FIELD ↔ CAVE: `ENTRANCE_CAVE` と洞窟内の `STAIRS_UP` でリンク。
 
 ### イベント配置
@@ -36,18 +36,18 @@ Version: 0.3 / Target: Browser / Engine: p5.js / Canvas: 800x600 / Grid: 24x18 (
 - **フォールバック**: スプライトが読み込めない場合は単色矩形で代替表示。
 
 ## 3. NPC / オブジェクト
-- **商人**: VILLAGE `{x:13, y:3}`。`T` で会話しショップ UI を開く。
-- **宿屋**: VILLAGE `{x:9, y:3}`。`T` で会話し宿泊選択 (10G で HP 全回復)。  
+- **商人**: TOWN `{x:13, y:3}`。`T` で会話しショップ UI を開く。
+- **宿屋**: TOWN `{x:9, y:3}`。`T` で会話し宿泊選択 (10G で HP 全回復)。
 - **プレイヤー**: 初期位置 `{x:2, y:2}` FIELD。アクションは矢印キー/ WASD / Enter / Esc。
 - **宝箱 (CHEST)**: CAVE `{x:10, y:8}`。未開封なら Ancient Key を取得しフラグ管理。
 - **RUINS**: FIELD `{x:5, y:5}`。Ancient Key 所持でゲームクリア演出を表示。
-- **マップ遷移タイル**: `ENTRANCE_VIL`, `ENTRANCE_CAVE`, `DOOR`, `STAIRS_UP/STAIRS_DOWN`。
+- **マップ遷移タイル**: `ENTRANCE_TOWN`, `ENTRANCE_CAVE`, `DOOR`, `STAIRS_UP/STAIRS_DOWN`。
 
 ## 4. プレイヤー成長とアイテム
 - **初期ステータス**: HP30 / ATK5 / DEF3 / LV1 / EXP0 / Food50 / Gold50。装備枠は weapon/shield の 2 種。
 - **レベル上限**: `LV_THRESH = [10, 30, 60, 100, 160]`。レベルアップで HP+5, ATK+1, DEF+1, HP 即時 +5。
 - **アイテム**: インベントリ 6 スロット。 `FOOD10`, `POTION`, `BRONZE_SWORD`, `WOOD_SHIELD`, `ANCIENT_KEY`。
-- **Food 消費**: FIELD/CAVE で 2 ターンに 1 減少 (0 で HP 毎ターン -1)。VILLAGE では消費なし。
+- **Food 消費**: FIELD/CAVE で 2 ターンに 1 減少 (0 で HP 毎ターン -1)。TOWN では消費なし。
 - **敗北処理**: HP0 で FIELD の安全地点に復帰し、HP 全回復 (`resetPlayerToSafePoint`)。
 
 ## 5. 敵システム
