@@ -249,12 +249,19 @@
      p.fill(15, 15, 20);
      p.stroke(80);
      p.rect(x, y, layout.panelWidth, layout.panelHeight);
-     p.fill(240);
      p.textAlign(p.LEFT, p.TOP);
      p.textSize(16);
      const keyStatus = Game.flags && Game.flags.hasKey ? "あり" : "なし";
+
+     // HP表示（最大HPの1/5以下で赤字）
+     const isLowHp = player.hp <= player.maxHp / 5;
+     p.fill(isLowHp ? p.color(255, 100, 100) : 240);
+     p.text(`HP: ${player.hp}/${player.maxHp}`, x + 12, y + 12);
+
+     // 残りのステータス表示
+     p.fill(240);
+     p.text(`LV: ${player.lv}  EXP: ${player.exp}`, x + 220, y + 12);
      const lines = [
-       `HP: ${player.hp}/${player.maxHp}  LV: ${player.lv}  EXP: ${player.exp}`,
        `ATK/DEF: ${stats.atk} / ${stats.def}`,
        `Food: ${player.food}  Gold: ${player.gold}  Key: ${keyStatus}`,
        `Weapon: ${player.equip.weapon !== null ? "Bronze Sword" : "-"}  Shield: ${
@@ -262,7 +269,7 @@
        }`,
      ];
      lines.forEach((line, index) => {
-       p.text(line, x + 12, y + 12 + index * 24);
+       p.text(line, x + 12, y + 12 + (index + 1) * 24);
      });
    }
 
@@ -365,8 +372,15 @@
      p.textSize(18);
      p.text("STATUS  ESC/S:閉じる", overlayArea.x + 16, overlayArea.y + 14);
      p.textSize(16);
+
+     // HP表示（最大HPの1/5以下で赤字）
+     const isLowHp = player.hp <= player.maxHp / 5;
+     p.fill(isLowHp ? p.color(255, 100, 100) : 255);
+     p.text(`HP: ${player.hp}/${player.maxHp}`, overlayArea.x + 16, overlayArea.y + 60);
+
+     // 残りのステータス表示
+     p.fill(255);
      const lines = [
-       `HP: ${player.hp}/${player.maxHp}`,
        `LV: ${player.lv}    EXP: ${player.exp}`,
        `ATK: ${stats.atk}    DEF: ${stats.def}`,
        `Food: ${player.food}    Gold: ${player.gold}`,
@@ -374,7 +388,7 @@
        `Shield: ${player.equip.shield !== null ? "Wood Shield" : "-"}`,
      ];
      lines.forEach((line, index) => {
-       p.text(line, overlayArea.x + 16, overlayArea.y + 60 + index * 24);
+       p.text(line, overlayArea.x + 16, overlayArea.y + 60 + (index + 1) * 24);
      });
    }
 
@@ -437,11 +451,17 @@
     p.textSize(16);
     p.text(`HP ${enemy.hp}/${enemy.maxHp}`, textX, overlayArea.y + 48);
     p.text("A:攻撃  D:防御  R:逃走", textX, overlayArea.y + 72);
+
+    // プレイヤーHP表示（最大HPの1/5以下で赤字）
+    const player = Game.state.player;
+    const isLowHp = player.hp <= player.maxHp / 5;
+    p.fill(isLowHp ? p.color(255, 100, 100) : 255);
     p.text(
-      `プレイヤーHP: ${Game.state.player.hp}/${Game.state.player.maxHp}`,
+      `プレイヤーHP: ${player.hp}/${player.maxHp}`,
       textX,
       overlayArea.y + 96
     );
+    p.fill(255);
   }
   function drawClearOverlay(p = window) {
      if (!Game.flags || !Game.flags.cleared) return;
