@@ -185,7 +185,7 @@
      },
    });
 
-   const LV_THRESH = Object.freeze([10, 30, 60, 100, 160]);
+   const LV_THRESH = Object.freeze([10, 30, 60, 100, 150, 210, 280, 360, 440]);
 
    const progressFlags = {
      hasKey: false,
@@ -950,8 +950,13 @@
        if (state.player.exp < target) break;
        state.player.lv += 1;
        state.player.maxHp += 5;
-       state.player.atk += 1;
-       state.player.def += 1;
+       if (state.player.lv % 2 === 0) {
+         // 偶数レベル: ATK+1
+         state.player.atk += 1;
+       } else {
+         // 奇数レベル: DEF+1
+         state.player.def += 1;
+       }
        leveled = true;
        pushMessage(`レベル ${state.player.lv} に上がった！`);
      }
