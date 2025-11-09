@@ -213,11 +213,11 @@
      player: createDefaultPlayer(),
      merchant: {
        scene: SCENE.VILLAGE,
-       pos: { x: 14, y: 11 },
+       pos: { x: 13, y: 10 },
      },
      innkeeper: {
        scene: SCENE.VILLAGE,
-       pos: { x: 10, y: 6 },
+       pos: { x: 9, y: 5 },
      },
      flags: {
        starvingNotified: false,
