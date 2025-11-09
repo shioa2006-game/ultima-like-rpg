@@ -129,9 +129,11 @@
       return;
     }
     const session = dialogueState.session;
-
-    // 既に会話中の場合は何もしない（セリフ送りはadvance()で行う）
-    if (session.active) {
+    if (session.active && session.characterId !== characterId) {
+      resetSession();
+    }
+    if (session.active && session.characterId === characterId) {
+      advanceSession();
       return;
     }
 
@@ -154,16 +156,6 @@
     session.lines = Array.isArray(lines) ? lines.slice() : [];
     session.index = 0;
     session.phase = phase;
-  }
-
-  // セリフ送り専用関数（Enterキーで呼び出される）
-  function advance() {
-    const session = dialogueState.session;
-    // 会話中でなければ何もしない
-    if (!session.active) {
-      return false;
-    }
-    return advanceSession();
   }
 
   function advanceSession() {
@@ -224,7 +216,6 @@
     STORY_PHASE,
     loadDialogues,
     talk,
-    advance,
     getCurrentPhase,
     isLoaded,
     isSessionActive: () => dialogueState.session.active,
