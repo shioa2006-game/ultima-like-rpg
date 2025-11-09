@@ -24,20 +24,16 @@ NPCとの対話をストーリー進行段階に応じて動的に変更する�
 
 ## 3. ストーリー進行段階 (STORY_PHASE)
 
-ゲームの進行状態を以下の5段階で管理：
+ゲームの進行状態を以下の3段階で管理：
 
 | フェーズID | 名称 | 条件 | 説明 |
 |-----------|------|------|------|
 | 0 | START | ゲーム開始時・初回会話前 | クエスト説明、世界観導入 |
 | 1 | QUEST_GIVEN | `progressFlags.questGiven === true` | クエスト受領後、鍵未入手時 |
 | 2 | KEY_OBTAINED | `progressFlags.hasKey === true` | Ancient Key 入手後 |
-| 3 | DRAGON_DEFEATED | `flags.dragonDefeated === true` | ドラゴン撃破後 |
-| 4 | CLEARED | `progressFlags.cleared === true` | ゲームクリア後 |
 
 **判定ロジック** (`dialogue.js::getCurrentPhase()`):
 ```javascript
-if (state.progressFlags.cleared) return STORY_PHASE.CLEARED;
-if (flags.dragonDefeated) return STORY_PHASE.DRAGON_DEFEATED;
 if (state.progressFlags.hasKey) return STORY_PHASE.KEY_OBTAINED;
 if (state.progressFlags.questGiven) return STORY_PHASE.QUEST_GIVEN;
 return STORY_PHASE.START;
@@ -46,6 +42,10 @@ return STORY_PHASE.START;
 **フラグ管理の追加**:
 - 初回会話後に `Game.state.progressFlags.questGiven = true` を設定
 - これにより2回目以降の会話で異なるセリフを表示
+
+**注記**:
+- ゲームクリア（遺跡到達）後は王様に戻る機会がないため、クリア後のセリフは不要
+- 将来的にエンディング後の自由探索を追加する場合は、フェーズ3以降を拡張可能
 
 ## 4. JSONスキーマ設計
 
@@ -65,9 +65,7 @@ assets/
   "storyPhases": {
     "START": 0,
     "QUEST_GIVEN": 1,
-    "KEY_OBTAINED": 2,
-    "DRAGON_DEFEATED": 3,
-    "CLEARED": 4
+    "KEY_OBTAINED": 2
   },
   "characters": {
     "<キャラクターID>": {
@@ -118,14 +116,6 @@ TOWN `{x:18, y:2}` に配置されている王様のセリフ定義：
         "王様: さすがだ。これで遺跡の扉を開けることができる。",
         "王様: だが、中には強大なドラゴンが待ち受けているだろう。",
         "王様: 十分に準備を整えてから向かうのだ。武器と防具を整え、体力を万全にしておけ。"
-      ],
-      "3": [
-        "王様: ドラゴンを倒したと聞いた。よくやった！",
-        "王様: まだ遺跡の奥に何かあるかもしれん。"
-      ],
-      "4": [
-        "王様: 見事だ！この国の危機を救ってくれた。",
-        "王様: そなたこそ真の勇者だ。ゆっくり休むと良い。"
       ]
     }
   }
@@ -144,9 +134,7 @@ TOWN `{x:18, y:2}` に配置されている王様のセリフ定義：
 - **フェーズ2（鍵入手後）**: 次の目標の提示と警告
   - 鍵入手を祝福
   - 遺跡への道が開けたことを伝える
-  - ドラゴン戦への準備を促す
-- **フェーズ3（ドラゴン撃破後）**: 称賛とさらなる探索の示唆
-- **フェーズ4（ゲームクリア後）**: 最終的な勝利の祝福
+  - ドラゴン戦への準備を促す（最終ミッション）
 
 ## 6. dialogue.js モジュール仕様
 
@@ -265,8 +253,8 @@ ultima-like-rpg/
 
 ### 短期的な拡張
 - 大臣、兵士、村人などのストーリーキャラクター追加
-- フェーズ1 (QUEST_GIVEN) の実装とクエスト受諾システム
 - ランダムセリフ（配列から1つを選択）
+- エンディング後の自由探索モード追加（フェーズ3以降の実装）
 
 ### 中期的な拡張
 - 選択肢システム（Yes/No、複数選択）
