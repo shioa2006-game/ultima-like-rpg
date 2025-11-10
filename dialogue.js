@@ -160,7 +160,8 @@
     const session = dialogueState.session;
     session.active = true;
     session.characterId = characterId;
-    session.lines = Array.isArray(lines) ? lines.slice() : [];
+    // 最後に空行を追加して会話の終わりを明確にする
+    session.lines = Array.isArray(lines) ? [...lines, ""] : [""];
     session.index = 0;
     session.phase = phase;
   }
@@ -174,7 +175,8 @@
     }
     const line = session.lines[session.index];
     session.index += 1;
-    if (typeof line === "string" && line.trim().length > 0) {
+    // 空文字列も含めてすべてのメッセージを表示（空行も表示される）
+    if (typeof line === "string") {
       Game.pushMessage(line);
     }
     if (session.index >= session.lines.length) {
@@ -192,8 +194,7 @@
     ) {
       Game.flags.questTalked = true;
     }
-    // 会話終了を示す空行を追加
-    Game.pushMessage("");
+    // 空行はstartSession()で追加済みなので、ここでは追加しない
     // クールダウンを有効化（次の移動まで会話を開始できない）
     dialogueState.cooldownUntilMove = true;
     resetSession();
