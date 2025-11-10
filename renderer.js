@@ -10,7 +10,7 @@
      mapAreaHeight,
      mapOffsetX: 0,
      mapOffsetY: 0,
-     panelHeight: 120,
+     panelHeight: 150,
      panelWidth: Game.config.canvasWidth / 2,
    };
 
