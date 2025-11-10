@@ -18,6 +18,7 @@
       index: 0,
       phase: STORY_PHASE.START,
     },
+    cooldownUntilMove: false, // 会話終了後、1ターン移動するまで新しい会話を開始できない
   };
 
   function createFallbackData() {
@@ -129,6 +130,12 @@
       return;
     }
     const session = dialogueState.session;
+
+    // クールダウン中は新しい会話を開始できない
+    if (dialogueState.cooldownUntilMove && !session.active) {
+      return;
+    }
+
     if (session.active && session.characterId !== characterId) {
       resetSession();
     }
@@ -185,6 +192,10 @@
     ) {
       Game.flags.questTalked = true;
     }
+    // 会話終了を示す空行を追加
+    Game.pushMessage("");
+    // クールダウンを有効化（次の移動まで会話を開始できない）
+    dialogueState.cooldownUntilMove = true;
     resetSession();
   }
 
@@ -212,6 +223,10 @@
     return dialogueState.loaded;
   }
 
+  function clearCooldown() {
+    dialogueState.cooldownUntilMove = false;
+  }
+
   Game.dialogue = {
     STORY_PHASE,
     loadDialogues,
@@ -219,5 +234,6 @@
     getCurrentPhase,
     isLoaded,
     isSessionActive: () => dialogueState.session.active,
+    clearCooldown,
   };
 })();
