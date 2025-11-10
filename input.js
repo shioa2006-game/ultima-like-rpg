@@ -247,6 +247,10 @@
      Game.occupancy.markDirty();
      Game.occupancy.ensure();
      Game.occupancy.resolveTileEvent(next.x, next.y);
+     // プレイヤーが移動したので会話のクールダウンをリセット
+     if (Game.dialogue && typeof Game.dialogue.clearCooldown === "function") {
+       Game.dialogue.clearCooldown();
+     }
    }
 
    function handleFoodCost() {
