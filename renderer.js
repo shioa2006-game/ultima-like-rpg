@@ -3,7 +3,7 @@
    const Game = (window.Game = window.Game || {});
 
    const tileSize = Game.config.tileSize;
-   const mapAreaHeight = 480;
+   const mapAreaHeight = 450;
 
    const layout = {
      mapAreaWidth: Game.config.canvasWidth,
