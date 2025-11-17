@@ -66,7 +66,7 @@ ultima-like-rpg/
 ├── README.md               # このファイル
 ├── GAME_DESIGN.md          # 設計仕様書
 ├── Progress.md             # 開発進捗管理
-├── Gap.md                  # 既知の課題
+├── Gap.md                  # 設計仕様書と実装のGap
 └── AGENTS.md               # 開発ガイドライン
 ```
 
